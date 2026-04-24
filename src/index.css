@@ -1,0 +1,115 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=Zilla+Slab:wght@400;600&family=DM+Sans:wght@400;500&display=swap');
+
+/* ── COLOR SCHEME ─────────────────────────────────────────── */
+:root {
+  --olive:       #3D4A2D;
+  --olive-light: #5C6E42;
+  --olive-dark:  #2E3A20;
+  --terra:       #C1502A;
+  --terra-light: #E8724A;
+  --terra-dark:  #8B3318;
+  --cream:       #F5EFE0;
+  --cream2:      #EDE4CE;
+  --light-gray:  #F0EDE6;
+  --charcoal:    #1E1C18;
+  --warm-gray:   #7A7060;
+  --mid-gray:    #B4B2A9;
+  --gold:        #D4943A;
+  --white:       #FFFFFF;
+  --red-soft:    #FCEBEB;
+}
+
+/* ── RESET ────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { font-size: 15px; scroll-behavior: smooth; }
+
+body {
+  background: var(--cream);
+  color: var(--charcoal);
+  font-family: 'DM Sans', sans-serif;
+  overflow-x: hidden;
+  line-height: 1.6;
+}
+
+/* ── TYPOGRAPHY ───────────────────────────────────────────── */
+h1, h2, h3 { font-family: 'Playfair Display', serif; line-height: 1.1; }
+h4, h5, h6 { font-family: 'Zilla Slab', serif; }
+
+a { color: var(--terra); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* ── BUTTONS ──────────────────────────────────────────────── */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  gap: 0.4rem; border: none; border-radius: 6px;
+  padding: 0.7rem 1.4rem; font-size: 0.88rem; font-weight: 500;
+  font-family: 'DM Sans', sans-serif; cursor: pointer;
+  transition: background 0.2s, transform 0.1s, opacity 0.2s;
+}
+.btn:active { transform: scale(0.98); }
+
+.btn-primary   { background: var(--terra);      color: var(--white); }
+.btn-primary:hover { background: var(--terra-light); }
+
+.btn-secondary { background: var(--olive-dark); color: var(--cream); }
+.btn-secondary:hover { background: var(--olive); }
+
+.btn-outline {
+  background: transparent; color: var(--cream);
+  border: 1.5px solid rgba(245,239,224,0.4);
+}
+.btn-outline:hover { border-color: var(--cream); }
+
+.btn-ghost {
+  background: var(--light-gray); color: var(--warm-gray);
+}
+.btn-ghost:hover { background: var(--cream2); }
+
+/* ── TAGS / PILLS ─────────────────────────────────────────── */
+.tag {
+  display: inline-block; font-size: 0.68rem; font-weight: 500;
+  letter-spacing: 0.5px; text-transform: uppercase;
+  padding: 0.2rem 0.55rem; border-radius: 3px;
+  background: var(--cream2); color: var(--warm-gray);
+}
+.tag-challenge { background: var(--terra); color: var(--white); }
+.tag-live      { background: var(--terra); color: var(--white); }
+.tag-soon      { background: var(--gold);  color: var(--white); }
+
+/* ── CARDS ────────────────────────────────────────────────── */
+.card {
+  background: var(--white); border: 1px solid var(--cream2);
+  border-radius: 10px; overflow: hidden;
+  transition: box-shadow 0.2s, transform 0.15s;
+}
+.card:hover { box-shadow: 0 6px 24px rgba(0,0,0,0.08); transform: translateY(-2px); }
+
+/* ── FORM ELEMENTS ────────────────────────────────────────── */
+.input {
+  width: 100%; padding: 0.72rem 0.9rem;
+  background: var(--white); border: 1.5px solid var(--cream2);
+  border-radius: 7px; font-size: 0.92rem;
+  font-family: 'DM Sans', sans-serif; color: var(--charcoal);
+  outline: none; transition: border-color 0.2s, box-shadow 0.2s;
+}
+.input:focus {
+  border-color: var(--terra);
+  box-shadow: 0 0 0 3px rgba(193,80,42,0.1);
+}
+.input::placeholder { color: var(--mid-gray); }
+
+/* ── UTILS ────────────────────────────────────────────────── */
+.container { max-width: 1060px; margin: 0 auto; padding: 0 1.25rem; }
+.section-gap { padding: 2.5rem 0; }
+
+/* ── ANIMATIONS ───────────────────────────────────────────── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.fade-up { animation: fadeUp 0.5s ease both; }
+.fade-up-1 { animation-delay: 0.1s; }
+.fade-up-2 { animation-delay: 0.2s; }
+.fade-up-3 { animation-delay: 0.3s; }
+.fade-up-4 { animation-delay: 0.4s; }

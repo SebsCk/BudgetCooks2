@@ -1,0 +1,169 @@
+.page { min-height: 100vh; background: var(--light-gray); padding-bottom: 4rem; }
+.inner { max-width: 1100px; margin: 0 auto; padding: 2rem 1.25rem; }
+
+/* ── HEADER ── */
+.pageHeader {
+  display: flex; justify-content: space-between;
+  align-items: flex-start; flex-wrap: wrap; gap: 1rem;
+  margin-bottom: 1.75rem;
+}
+.back { font-size: 0.8rem; color: var(--warm-gray); text-decoration: none; display: block; margin-bottom: 0.3rem; }
+.back:hover { color: var(--terra); text-decoration: none; }
+.pageHeader h1 { font-size: 1.6rem; margin-bottom: 0.2rem; }
+.pageHeader p  { font-size: 0.85rem; color: var(--warm-gray); }
+.summaryCards { display: flex; gap: 0.75rem; }
+.summCard {
+  background: var(--white); border-radius: 10px;
+  padding: 0.75rem 1.1rem; text-align: center;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+  border-top: 3px solid var(--gold);
+}
+.summLabel { font-size: 0.68rem; text-transform: uppercase; color: var(--warm-gray); letter-spacing: 0.4px; }
+.summValue { font-size: 1.25rem; font-weight: 800; color: var(--charcoal); }
+
+/* ── TOOLBAR ── */
+.toolbar {
+  display: flex; align-items: center; gap: 1rem;
+  flex-wrap: wrap; margin-bottom: 1.25rem;
+}
+.viewToggle { display: flex; border: 1.5px solid var(--cream2); border-radius: 8px; overflow: hidden; }
+.viewBtn {
+  padding: 0.42rem 1rem; background: var(--white);
+  border: none; font-size: 0.82rem; font-weight: 600;
+  color: var(--warm-gray); cursor: pointer; transition: all 0.15s;
+}
+.viewBtn:first-child { border-right: 1px solid var(--cream2); }
+.viewActive { background: var(--olive) !important; color: var(--white) !important; }
+.dayPicker { display: flex; gap: 0.3rem; flex-wrap: wrap; }
+.dayChip {
+  padding: 0.32rem 0.7rem; border-radius: 20px;
+  border: 1.5px solid var(--cream2); background: var(--white);
+  font-size: 0.78rem; font-weight: 600; color: var(--warm-gray); cursor: pointer;
+  transition: all 0.15s;
+}
+.dayChip:hover  { border-color: var(--terra); color: var(--terra); }
+.dayActive      { background: var(--terra) !important; color: var(--white) !important; border-color: var(--terra) !important; }
+
+/* ── PLANNER GRID ── */
+.plannerWrap { margin-bottom: 2rem; }
+.weekView {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0.6rem;
+  overflow-x: auto;
+  padding-bottom: 0.5rem;
+}
+.dayView { display: grid; grid-template-columns: 1fr; gap: 0.6rem; max-width: 420px; }
+.dayCol { min-width: 130px; }
+
+.dayHeader {
+  background: var(--olive-dark); color: var(--cream);
+  text-align: center; font-size: 0.75rem; font-weight: 700;
+  padding: 0.45rem; border-radius: 8px 8px 0 0;
+  text-transform: uppercase; letter-spacing: 0.4px;
+}
+.slotCell {
+  background: var(--white); border: 1px solid var(--cream2);
+  padding: 0.45rem 0.5rem;
+  border-top: none;
+}
+.slotCell:last-child { border-radius: 0 0 8px 8px; }
+.slotLabel { font-size: 0.62rem; text-transform: uppercase; color: var(--warm-gray);
+             font-weight: 700; letter-spacing: 0.4px; margin-bottom: 0.3rem; }
+
+.mealCard {
+  display: flex; align-items: center; gap: 0.35rem;
+  background: var(--cream); border-radius: 6px;
+  padding: 0.35rem 0.4rem;
+  border-left: 3px solid var(--terra);
+}
+.mealEmoji { font-size: 0.95rem; flex-shrink: 0; }
+.mealInfo  { flex: 1; min-width: 0; }
+.mealTitle { font-size: 0.68rem; font-weight: 600; color: var(--charcoal);
+             display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mealMeta  { font-size: 0.6rem; color: var(--warm-gray); }
+.clearBtn  {
+  background: none; border: none; color: var(--warm-gray);
+  font-size: 0.9rem; cursor: pointer; flex-shrink: 0; padding: 0;
+  transition: color 0.15s;
+}
+.clearBtn:hover { color: var(--terra); }
+
+.emptySlot {
+  width: 100%; padding: 0.5rem 0;
+  background: var(--light-gray); border: 1.5px dashed var(--mid-gray);
+  border-radius: 6px; font-size: 0.72rem; color: var(--warm-gray);
+  cursor: pointer; transition: all 0.15s;
+}
+.emptySlot:hover { border-color: var(--terra); color: var(--terra); background: #fff8f4; }
+
+/* ── COST BREAKDOWN ── */
+.costBreakdown {
+  background: var(--white); border-radius: 12px;
+  padding: 1.25rem; box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+}
+.costBreakdown h3 { font-size: 1rem; margin-bottom: 1rem; }
+.costGrid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0.5rem;
+}
+@media (max-width: 600px) { .costGrid { grid-template-columns: repeat(4, 1fr); } }
+.dayCostCard {
+  background: var(--light-gray); border-radius: 8px;
+  padding: 0.65rem 0.5rem; text-align: center;
+}
+.dayCostDay   { font-size: 0.7rem; font-weight: 700; text-transform: uppercase;
+                color: var(--warm-gray); letter-spacing: 0.3px; }
+.dayCostVal   { font-size: 1rem; font-weight: 800; color: var(--terra); margin: 0.15rem 0; }
+.dayCostMeals { font-size: 0.65rem; color: var(--warm-gray); }
+
+/* ── MODAL ── */
+.modalOverlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 1000; padding: 1rem;
+}
+.modal {
+  background: var(--white); border-radius: 16px;
+  padding: 1.5rem; max-width: 420px; width: 100%;
+  max-height: 80vh; overflow-y: auto;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.2);
+  animation: popIn 0.2s cubic-bezier(0.22,1,0.36,1);
+}
+@keyframes popIn { from { opacity:0; transform:scale(0.94); } to { opacity:1; transform:scale(1); } }
+.modalHeader {
+  display: flex; justify-content: space-between; align-items: flex-start;
+  margin-bottom: 1rem;
+}
+.modalHeader h3 { font-size: 1.05rem; }
+.modalSub { font-size: 0.78rem; color: var(--warm-gray); margin-top: 0.2rem; }
+.modalClose {
+  background: var(--light-gray); border: none; border-radius: 50%;
+  width: 28px; height: 28px; font-size: 1.1rem; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--warm-gray); flex-shrink: 0;
+  transition: background 0.15s;
+}
+.modalClose:hover { background: var(--cream2); }
+.modalSearch {
+  width: 100%; border: 1.5px solid var(--cream2); border-radius: 8px;
+  padding: 0.5rem 0.85rem; font-size: 0.85rem; margin-bottom: 0.75rem;
+  font-family: 'DM Sans', sans-serif;
+}
+.modalSearch:focus { outline: none; border-color: var(--olive); }
+.recipeList { display: flex; flex-direction: column; gap: 0.4rem; }
+.recipeRow {
+  display: flex; align-items: center; gap: 0.75rem;
+  padding: 0.65rem 0.75rem; border-radius: 10px;
+  background: var(--light-gray); border: 1.5px solid transparent;
+  cursor: pointer; text-align: left; width: 100%;
+  transition: all 0.15s;
+}
+.recipeRow:hover { border-color: var(--terra); background: #fff8f4; }
+.rEmoji { font-size: 1.2rem; }
+.rInfo  { flex: 1; }
+.rTitle { font-size: 0.85rem; font-weight: 600; display: block; color: var(--charcoal); }
+.rMeta  { font-size: 0.72rem; color: var(--warm-gray); }
+.rAdd   { font-size: 1.1rem; color: var(--terra); font-weight: 700; }
+.modalEmpty { text-align: center; color: var(--warm-gray); padding: 1rem 0; font-size: 0.85rem; }
