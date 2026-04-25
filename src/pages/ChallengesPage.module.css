@@ -1,0 +1,33 @@
+.page { min-height: 100vh; background: var(--cream); }
+.header { background: var(--olive); color: var(--cream); padding: 2.5rem 1.25rem; text-align: center; }
+.header h1 { font-size: 2rem; color: var(--cream); margin-bottom: 0.5rem; }
+.header p { color: var(--cream2); opacity: 0.8; }
+.section { padding: 2rem 0 0; }
+.sectionTitle { font-size: 1.2rem; color: var(--charcoal); margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 2px solid var(--cream2); }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1rem; }
+.card { background: var(--white); border-radius: 10px; padding: 1.5rem; display: flex; gap: 1rem; box-shadow: 0 1px 4px rgba(0,0,0,0.07); border-left: 4px solid var(--cream2); }
+.cardLive { border-left-color: var(--terra); }
+.cardIcon { font-size: 2.5rem; flex-shrink: 0; }
+.cardBody { flex: 1; }
+.cardMeta { margin-bottom: 0.5rem; }
+.badge { font-size: 0.72rem; font-weight: 600; padding: 0.2rem 0.6rem; border-radius: 3px; text-transform: uppercase; letter-spacing: 0.5px; }
+.badgeLive { background: var(--terra); color: var(--white); }
+.badgeOpen { background: var(--olive-light); color: var(--white); }
+.badgeSoon { background: var(--gold); color: var(--white); }
+.cardTitle { font-size: 1.1rem; font-family: 'Playfair Display', serif; margin: 0.3rem 0; }
+.cardDesc { font-size: 0.85rem; color: var(--warm-gray); margin-bottom: 0.75rem; }
+.cardFooter { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem; }
+.entries { font-size: 0.8rem; color: var(--warm-gray); }
+.empty { text-align: center; padding: 3rem; color: var(--warm-gray); }
+
+.budget { font-size: 0.72rem; font-weight: 600; padding: 0.2rem 0.6rem; border-radius: 3px; background: var(--cream2); color: var(--charcoal); margin-left: 0.5rem; }
+.modalOverlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 1rem; }
+.modal { background: var(--white); border-radius: 12px; padding: 2rem; width: 100%; max-width: 480px; max-height: 90vh; overflow-y: auto; }
+.modal h3 { font-size: 1.2rem; margin-bottom: 1rem; }
+.form { display: flex; flex-direction: column; gap: 0.75rem; }
+.form label { font-size: 0.85rem; font-weight: 600; color: var(--charcoal); margin-bottom: -0.4rem; }
+.form input, .form textarea { padding: 0.6rem 0.9rem; border: 1.5px solid var(--cream2); border-radius: 6px; font-size: 0.9rem; width: 100%; box-sizing: border-box; }
+.form textarea { resize: vertical; }
+.formRow { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+.formError { color: var(--terra); font-size: 0.85rem; padding: 0.5rem; background: var(--red-soft); border-radius: 6px; }
+.modalActions { display: flex; gap: 0.75rem; justify-content: flex-end; margin-top: 0.5rem; }
