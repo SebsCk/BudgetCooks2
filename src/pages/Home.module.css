@@ -363,3 +363,25 @@
 }
 .commentInput:focus { outline: none; border-color: var(--olive); }
 .commentPost { padding: 0.45rem 0.9rem !important; font-size: 0.78rem !important; }
+
+.clearSearchBtn {
+  margin-left: 1rem;
+  background: none;
+  border: 1px solid var(--terra);
+  color: var(--terra);
+  border-radius: 20px;
+  padding: 0.2rem 0.75rem;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+.clearSearchBtn:hover { background: var(--terra); color: #fff; }
+
+.seeAllBtn {
+  background: none;
+  border: none;
+  color: var(--terra);
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+.seeAllBtn:hover { text-decoration: underline; }

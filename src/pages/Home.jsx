@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react'
-import { useLocation } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import styles from './Home.module.css'
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:4000'
@@ -13,12 +13,11 @@ const CATEGORIES = [
 
 const COMMENT_FILTERS = ['All', 'Positive', 'Question', 'Suggestion']
 
-/* ── COMMENT SECTION ───────────────────────────────────────── */
 function CommentSection({ recipeId, token }) {
-  const [filter, setFilter]   = useState('All')
+  const [filter, setFilter]     = useState('All')
   const [comments, setComments] = useState([])
   const [newComment, setNewComment] = useState('')
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading]   = useState(true)
 
   useEffect(() => {
     fetch(`${API}/api/comments/${recipeId}`)
@@ -38,11 +37,7 @@ function CommentSection({ recipeId, token }) {
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ text: newComment }),
       })
-      if (res.ok) {
-        const c = await res.json()
-        setComments(prev => [c, ...prev])
-        setNewComment('')
-      }
+      if (res.ok) { const c = await res.json(); setComments(prev => [c, ...prev]); setNewComment('') }
     } catch (err) { console.error(err) }
   }
 
@@ -56,47 +51,38 @@ function CommentSection({ recipeId, token }) {
           ))}
         </div>
       </div>
-      {loading ? (
-        <p className={styles.noComments}>Loading comments…</p>
-      ) : filtered.length === 0 ? (
-        <p className={styles.noComments}>No {filter.toLowerCase()} comments yet.</p>
-      ) : (
-        <div className={styles.commentList}>
-          {filtered.map(c => (
-            <div key={c.id} className={styles.commentItem}>
-              <div className={styles.commentAvatar}>{(c.author || c.username || '?').slice(0,2).toUpperCase()}</div>
-              <div className={styles.commentBody}>
-                <div className={styles.commentMeta}>
-                  <strong>{c.author || c.username}</strong>
-                  <span className={styles.commentTime}>{c.time || new Date(c.created_at).toLocaleDateString()}</span>
-                  {c.category && <span className={`${styles.commentBadge} ${styles[`badge${c.category}`]}`}>{c.category}</span>}
+      {loading ? <p className={styles.noComments}>Loading…</p>
+        : filtered.length === 0 ? <p className={styles.noComments}>No {filter.toLowerCase()} comments yet.</p>
+        : (
+          <div className={styles.commentList}>
+            {filtered.map(c => (
+              <div key={c.id} className={styles.commentItem}>
+                <div className={styles.commentAvatar}>{(c.author || c.username || '?').slice(0,2).toUpperCase()}</div>
+                <div className={styles.commentBody}>
+                  <div className={styles.commentMeta}>
+                    <strong>{c.author || c.username}</strong>
+                    <span className={styles.commentTime}>{c.time || new Date(c.created_at).toLocaleDateString()}</span>
+                    {c.category && <span className={`${styles.commentBadge} ${styles[`badge${c.category}`]}`}>{c.category}</span>}
+                  </div>
+                  <p>{c.text || c.content}</p>
+                  <button className={styles.commentLike}>❤ {c.likes || 0}</button>
                 </div>
-                <p>{c.text || c.content}</p>
-                <button className={styles.commentLike}>❤ {c.likes || 0}</button>
               </div>
-            </div>
-          ))}
-        </div>
-      )}
+            ))}
+          </div>
+        )}
       <div className={styles.commentInputRow}>
-        <input
-          className={styles.commentInput}
-          placeholder={token ? 'Add a comment…' : 'Log in to comment'}
-          value={newComment}
-          onChange={e => setNewComment(e.target.value)}
-          disabled={!token}
-          onKeyDown={e => e.key === 'Enter' && postComment()}
-        />
+        <input className={styles.commentInput} placeholder={token ? 'Add a comment…' : 'Log in to comment'}
+          value={newComment} onChange={e => setNewComment(e.target.value)} disabled={!token}
+          onKeyDown={e => e.key === 'Enter' && postComment()} />
         <button className={`btn btn-primary ${styles.commentPost}`} onClick={postComment} disabled={!token}>Post</button>
       </div>
     </div>
   )
 }
 
-/* ── RECIPE CARD ───────────────────────────────────────────── */
 function RecipeCard({ recipe, onLike, liked, token }) {
   const [expanded, setExpanded] = useState(false)
-
   return (
     <article className={styles.recipeCard}>
       <div className={styles.recipeImg} style={{ background: recipe.id % 2 === 0 ? 'var(--cream)' : 'var(--cream2)' }}>
@@ -139,20 +125,20 @@ function RecipeCard({ recipe, onLike, liked, token }) {
   )
 }
 
-/* ── HOME PAGE ─────────────────────────────────────────────── */
 const TABS = ['🔥 Hot', '✨ New', '👑 Top', '🏆 Challenges']
 
 export default function Home() {
-  const [activeTab,     setActiveTab]     = useState(0)
-  const [likes,         setLikes]         = useState({})
-  const [filterCat,     setFilterCat]     = useState('All')
-  const [filterLatest,  setFilterLatest]  = useState(false)
-  const [recipes,       setRecipes]       = useState([])
-  const [challenges,    setChallenges]    = useState([])
-  const [topCooks,      setTopCooks]      = useState([])
-  const [stats,         setStats]         = useState(null)
-  const [loadingFeed,   setLoadingFeed]   = useState(true)
-  const location = useLocation()
+  const [activeTab,    setActiveTab]    = useState(0)
+  const [likes,        setLikes]        = useState({})
+  const [filterCat,    setFilterCat]    = useState('All')
+  const [filterLatest, setFilterLatest] = useState(false)
+  const [recipes,      setRecipes]      = useState([])
+  const [challenges,   setChallenges]   = useState([])
+  const [topCooks,     setTopCooks]     = useState([])
+  const [stats,        setStats]        = useState(null)
+  const [loadingFeed,  setLoadingFeed]  = useState(true)
+  const location  = useLocation()
+  const navigate  = useNavigate()
 
   const token = localStorage.getItem('token')
   const searchQuery = new URLSearchParams(location.search).get('search') || ''
@@ -171,17 +157,13 @@ export default function Home() {
         if (challengesRes.ok) setChallenges(await challengesRes.json())
         if (topCooksRes.ok)   setTopCooks(await topCooksRes.json())
         if (statsRes.ok)      setStats(await statsRes.json())
-      } catch (err) {
-        console.error('Failed to load home data', err)
-      } finally {
-        setLoadingFeed(false)
-      }
+      } catch (err) { console.error('Failed to load home data', err) }
+      finally { setLoadingFeed(false) }
     }
     fetchAll()
   }, [])
 
   const toggleLike = id => setLikes(prev => ({ ...prev, [id]: !prev[id] }))
-
   const CAT_OPTS = ['All', ...new Set(recipes.map(r => r.category).filter(Boolean))]
 
   const displayed = useMemo(() => {
@@ -191,26 +173,25 @@ export default function Home() {
       r.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (r.author || r.username)?.toLowerCase().includes(searchQuery.toLowerCase())
     )
-    if (filterLatest || activeTab === 1) {
-      list = [...list].sort((a, b) => new Date(b.created_at || b.datePosted) - new Date(a.created_at || a.datePosted))
-    } else if (activeTab === 2) {
-      list = [...list].sort((a, b) => b.likes - a.likes)
-    } else if (activeTab === 0) {
-      list = [...list].sort((a, b) => (b.likes + (b.comments || 0) * 2) - (a.likes + (a.comments || 0) * 2))
-    } else if (activeTab === 3) {
-      list = list.filter(r => r.challenge)
-    }
+    if (filterLatest || activeTab === 1) list = [...list].sort((a,b) => new Date(b.created_at||b.datePosted) - new Date(a.created_at||a.datePosted))
+    else if (activeTab === 2) list = [...list].sort((a,b) => b.likes - a.likes)
+    else if (activeTab === 0) list = [...list].sort((a,b) => (b.likes+(b.comments||0)*2) - (a.likes+(a.comments||0)*2))
+    else if (activeTab === 3) list = list.filter(r => r.challenge)
     return list
   }, [recipes, filterCat, filterLatest, activeTab, searchQuery])
 
   const heroStats = [
-    [stats?.totalRecipes  ?? '—', 'Recipes shared'],
-    [stats?.totalUsers    ?? '—', 'Community cooks'],
+    [stats?.totalRecipes      ?? '—', 'Recipes shared'],
+    [stats?.totalUsers        ?? '—', 'Community cooks'],
     [stats?.avgMealCost ? `₱${stats.avgMealCost}` : '—', 'Avg. meal cost'],
-    [stats?.totalChallenges ?? '—', 'Active challenges'],
+    [stats?.totalChallenges   ?? '—', 'Active challenges'],
   ]
 
   const liveChallenge = challenges.find(c => c.status === 'live')
+
+  const goToFeed    = (cat) => navigate(cat ? `/feed?category=${encodeURIComponent(cat)}` : '/feed')
+  const goToShare   = ()    => navigate('/feed')
+  const clearSearch = ()    => navigate('/')
 
   return (
     <div className={styles.page}>
@@ -225,8 +206,8 @@ export default function Home() {
             and join challenges like the ₱100 Ulam Showdown.
           </p>
           <div className={`${styles.heroActions} fade-up fade-up-2`}>
-            <button className="btn btn-primary">Share a Recipe</button>
-            <button className="btn btn-outline">Browse Feed</button>
+            <button className="btn btn-primary"  onClick={goToShare}>Share a Recipe</button>
+            <button className="btn btn-outline"  onClick={() => goToFeed()}>Browse Feed</button>
           </div>
           <div className={`${styles.heroStats} fade-up fade-up-3`}>
             {heroStats.map(([num, lbl]) => (
@@ -239,12 +220,12 @@ export default function Home() {
         </div>
       </section>
 
-      {/* CHALLENGE BANNER — only shows if there's a live challenge */}
+      {/* CHALLENGE BANNER */}
       {liveChallenge && (
         <div className={styles.challengeBanner}>
           <span className={styles.challengeBadge}>🔥 Live Now</span>
           <p><strong>{liveChallenge.name}</strong> — {liveChallenge.meta}</p>
-          <button className={styles.challengeJoin}>Join Challenge →</button>
+          <button className={styles.challengeJoin} onClick={() => navigate('/challenges')}>Join Challenge →</button>
         </div>
       )}
 
@@ -256,9 +237,7 @@ export default function Home() {
           <main className={styles.feed}>
             <div className={styles.sortTabs}>
               {TABS.map((t, i) => (
-                <button key={t}
-                  className={`${styles.sortTab} ${activeTab === i ? styles.active : ''}`}
-                  onClick={() => setActiveTab(i)}>{t}</button>
+                <button key={t} className={`${styles.sortTab} ${activeTab === i ? styles.active : ''}`} onClick={() => setActiveTab(i)}>{t}</button>
               ))}
             </div>
 
@@ -266,14 +245,10 @@ export default function Home() {
               <div className={styles.filterLeft}>
                 <span className={styles.filterLabel}>Filter:</span>
                 {CAT_OPTS.map(c => (
-                  <button key={c}
-                    className={`${styles.filterChip} ${filterCat === c ? styles.filterActive : ''}`}
-                    onClick={() => setFilterCat(c)}>{c}</button>
+                  <button key={c} className={`${styles.filterChip} ${filterCat === c ? styles.filterActive : ''}`} onClick={() => setFilterCat(c)}>{c}</button>
                 ))}
               </div>
-              <button
-                className={`${styles.latestBtn} ${filterLatest ? styles.latestActive : ''}`}
-                onClick={() => setFilterLatest(v => !v)}>
+              <button className={`${styles.latestBtn} ${filterLatest ? styles.latestActive : ''}`} onClick={() => setFilterLatest(v => !v)}>
                 🕒 {filterLatest ? 'Latest ✓' : 'Latest'}
               </button>
             </div>
@@ -281,12 +256,13 @@ export default function Home() {
             {searchQuery && (
               <div className={styles.searchBanner}>
                 🔍 Showing results for "<strong>{searchQuery}</strong>" — {displayed.length} found
+                <button className={styles.clearSearchBtn} onClick={clearSearch}>✕ Clear search</button>
               </div>
             )}
 
             <div className={styles.sectionHd}>
               <h2>Community Feed</h2>
-              <a href="#feed">See all →</a>
+              <button className={styles.seeAllBtn} onClick={() => goToFeed()}>See all →</button>
             </div>
 
             <div className={styles.recipeList}>
@@ -294,7 +270,12 @@ export default function Home() {
                 <div className={styles.emptyState}><p>Loading recipes…</p></div>
               ) : displayed.length === 0 ? (
                 <div className={styles.emptyState}>
-                  <p>😅 No recipes yet. Be the first to share one!</p>
+                  <p>😅 {searchQuery ? `No recipes found for "${searchQuery}".` : 'No recipes yet. Be the first to share one!'}</p>
+                  {searchQuery && (
+                    <button className="btn btn-outline" style={{color:'var(--terra)',borderColor:'var(--terra)',marginTop:'1rem'}} onClick={clearSearch}>
+                      ✕ Clear search
+                    </button>
+                  )}
                 </div>
               ) : displayed.map(r => (
                 <RecipeCard key={r.id} recipe={r} liked={!!likes[r.id]} onLike={toggleLike} token={token} />
@@ -302,13 +283,13 @@ export default function Home() {
             </div>
 
             {displayed.length > 0 && (
-              <button className={`btn btn-ghost ${styles.loadMore}`}>Load more recipes</button>
+              <button className={`btn btn-ghost ${styles.loadMore}`} onClick={() => goToFeed()}>Load more recipes</button>
             )}
           </main>
 
           {/* SIDEBAR */}
           <aside className={styles.sidebar}>
-            <button className={`btn btn-secondary ${styles.postBtn}`}>＋ &nbsp;Share Your Recipe</button>
+            <button className={`btn btn-secondary ${styles.postBtn}`} onClick={goToShare}>＋ &nbsp;Share Your Recipe</button>
 
             <div className={styles.sideCard}>
               <h3>🏆 Active Challenges</h3>
@@ -326,6 +307,9 @@ export default function Home() {
                     </span>
                   </div>
                 ))}
+              {challenges.length > 0 && (
+                <button className={styles.seeAll} onClick={() => navigate('/challenges')}>See all challenges →</button>
+              )}
             </div>
 
             <div className={styles.sideCard}>
@@ -351,8 +335,7 @@ export default function Home() {
               <h3>🗂 Browse Categories</h3>
               <div className={styles.catGrid}>
                 {CATEGORIES.map(cat => (
-                  <button key={cat.label} className={styles.catChip}
-                    onClick={() => setFilterCat(filterCat === cat.label ? 'All' : cat.label)}>
+                  <button key={cat.label} className={styles.catChip} onClick={() => goToFeed(cat.label)}>
                     {cat.emoji} {cat.label}
                   </button>
                 ))}
