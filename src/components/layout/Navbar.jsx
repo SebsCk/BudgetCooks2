@@ -1,13 +1,13 @@
 import { useState, useRef, useEffect } from 'react'
-import { Link, useNavigate }           from 'react-router-dom'
-import { useAuth }                     from '../../context/AuthContext'
-import styles                          from './Navbar.module.css'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
+import { useAuth }  from '../../context/AuthContext'
+import styles       from './Navbar.module.css'
 
 const links = [
-  { label: 'Feed',       href: '#feed'       },
-  { label: 'Challenges', href: '#challenges' },
-  { label: 'Categories', href: '#categories' },
-  { label: 'About',      href: '#about'      },
+  { label: 'Feed',       to: '/feed'       },
+  { label: 'Challenges', to: '/challenges' },
+  { label: 'Categories', to: '/categories' },
+  { label: 'About',      to: '/about'      },
 ]
 
 export default function Navbar() {
@@ -16,6 +16,7 @@ export default function Navbar() {
   const [searchQuery, setSearchQuery] = useState('')
   const { user, logout }              = useAuth()
   const navigate                      = useNavigate()
+  const location                      = useLocation()
   const dropRef                       = useRef(null)
 
   useEffect(() => {
@@ -26,11 +27,22 @@ export default function Navbar() {
     return () => document.removeEventListener('mousedown', handler)
   }, [])
 
+  useEffect(() => {
+    if (!location.search.includes('search=')) setSearchQuery('')
+  }, [location])
+
   const handleLogout = () => { logout(); setDropOpen(false); navigate('/') }
 
   const handleSearch = (e) => {
     e.preventDefault()
-    if (searchQuery.trim()) { navigate(`/?search=${encodeURIComponent(searchQuery.trim())}`); setSearchQuery('') }
+    if (searchQuery.trim()) {
+      navigate(`/feed?search=${encodeURIComponent(searchQuery.trim())}`)
+    }
+  }
+
+  const clearSearch = () => {
+    setSearchQuery('')
+    if (location.search.includes('search=')) navigate('/feed')
   }
 
   return (
@@ -40,7 +52,12 @@ export default function Navbar() {
 
         <ul className={`${styles.links} ${menuOpen ? styles.open : ''}`}>
           {links.map(l => (
-            <li key={l.label}><a href={l.href} onClick={() => setMenuOpen(false)}>{l.label}</a></li>
+            <li key={l.label}>
+              <Link to={l.to} onClick={() => setMenuOpen(false)}
+                className={location.pathname === l.to ? styles.activeLink : ''}>
+                {l.label}
+              </Link>
+            </li>
           ))}
           {user?.role === 'admin' && (
             <li><Link to="/admin" onClick={() => setMenuOpen(false)} className={styles.adminLink}>⚙ Admin</Link></li>
@@ -52,7 +69,7 @@ export default function Navbar() {
           <input className={styles.searchInput} type="text" placeholder="Search recipes…"
             value={searchQuery} onChange={e => setSearchQuery(e.target.value)} aria-label="Search recipes" />
           {searchQuery && (
-            <button type="button" className={styles.searchClear} onClick={() => setSearchQuery('')}>×</button>
+            <button type="button" className={styles.searchClear} onClick={clearSearch}>×</button>
           )}
         </form>
 
