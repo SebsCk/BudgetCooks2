@@ -10,7 +10,7 @@ const NOTIF_TYPE_MAP = { favorite:'Favorites', forum:'Forum', user_add:'Users', 
 
 function CreateAccountForm() {
   const { createAccount } = useAuth()
-  const [form, setForm] = useState({ email: '', username: '', password: '', role: 'user' })
+  const [form, setForm] = useState({ email: '', username: '', password: '', role: 'member' })
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
   const [loading, setLoading] = useState(false)
@@ -24,7 +24,7 @@ function CreateAccountForm() {
     try {
       await createAccount(form.email, form.username, form.password, form.role)
       setSuccess(`Account created successfully for ${form.username} (${form.role})`)
-      setForm({ email: '', username: '', password: '', role: 'user' })
+      setForm({ email: '', username: '', password: '', role: 'member' })
     } catch (err) {
       setError(err.message)
     } finally {
@@ -57,7 +57,7 @@ function CreateAccountForm() {
           <div className={styles.field}>
             <label htmlFor="role">Role</label>
             <select id="role" name="role" value={form.role} onChange={handleChange}>
-              <option value="user">User</option>
+              <option value="member">User</option>
               <option value="admin">Admin</option>
             </select>
           </div>
