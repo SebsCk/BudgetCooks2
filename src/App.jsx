@@ -11,6 +11,7 @@ import FeedPage            from './pages/FeedPage'
 import ChallengesPage      from './pages/ChallengesPage'
 import CategoriesPage      from './pages/CategoriesPage'
 import AboutPage           from './pages/AboutPage'
+import ShareRecipePage     from './pages/ShareRecipePage'
 import './index.css'
 
 export default function App() {
@@ -21,6 +22,7 @@ export default function App() {
         <Routes>
           <Route path="/"              element={<Home />}            />
           <Route path="/feed"          element={<FeedPage />}        />
+          <Route path="/share"         element={<ShareRecipePage />} />
           <Route path="/challenges"    element={<ChallengesPage />}  />
           <Route path="/categories"    element={<CategoriesPage />}  />
           <Route path="/about"         element={<AboutPage />}       />

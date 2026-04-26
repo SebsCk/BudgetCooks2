@@ -139,7 +139,8 @@ function AddChallengeModal({ token, onClose, onAdded }) {
 }
 
 export default function ChallengesPage() {
-  const { user, token } = useAuth()
+  const { user } = useAuth()
+  const token = localStorage.getItem('token')
   const [challenges, setChallenges] = useState([])
   const [loading,    setLoading]    = useState(true)
   const [showModal,  setShowModal]  = useState(false)

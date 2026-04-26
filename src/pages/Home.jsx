@@ -190,7 +190,7 @@ export default function Home() {
   const liveChallenge = challenges.find(c => c.status === 'live')
 
   const goToFeed    = (cat) => navigate(cat ? `/feed?category=${encodeURIComponent(cat)}` : '/feed')
-  const goToShare   = ()    => navigate('/feed')
+  const goToShare   = ()    => navigate('/share')
   const clearSearch = ()    => navigate('/')
 
   return (
