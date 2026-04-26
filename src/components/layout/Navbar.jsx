@@ -8,6 +8,7 @@ const links = [
   { label: 'Challenges', to: '/challenges' },
   { label: 'Categories', to: '/categories' },
   { label: 'About',      to: '/about'      },
+  { label: 'Forum',      to: '/forum'      },
 ]
 
 export default function Navbar() {
