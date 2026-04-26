@@ -108,6 +108,7 @@ export default function FeedPage() {
               <button className={styles.clearBtn} onClick={clearAll}>✕ Clear</button>
             )}
           </div>
+          <button className="btn btn-primary" onClick={() => navigate('/share')}>＋ Add Recipe</button>
         </div>
 
         <div className={styles.tabs}>
