@@ -31,6 +31,7 @@ function EditRecipeModal({ recipe, token, onClose, onSaved }) {
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({
           ...form,
+          category:       form.category,
           estimated_cost: Number(form.estimated_cost) || 0,
           servings:       Number(form.servings) || 1,
           prep_time_mins: Number(form.prep_time_mins) || 0,
@@ -109,7 +110,7 @@ function EditRecipeModal({ recipe, token, onClose, onSaved }) {
           token={localStorage.getItem('token')}
           onClose={() => setEditRecipe(null)}
           onSaved={updated => {
-            setRecipes(rs => rs.map(r => r.id === updated.id ? {...r, ...updated} : r))
+            setRecipes(rs => rs.map(r => r.id === updated.id ? {...r, ...updated, category: updated.category} : r))
             setEditRecipe(null)
           }}
         />

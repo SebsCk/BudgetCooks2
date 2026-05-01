@@ -27,7 +27,7 @@ router.get('/', async (req, res) => {
            r.image_url, r.created_at,
            CASE WHEN r.anonymous = 1 THEN 'Anonymous' ELSE u.username END AS author,
            CASE WHEN r.anonymous = 1 THEN NULL ELSE u.avatar_url END AS author_avatar,
-           c.name AS category,
+           COALESCE(r.category_name, c.name) AS category,
            COUNT(DISTINCT l.id) AS like_count,
            COUNT(DISTINCT cm.id) AS comment_count
     FROM recipes r
@@ -53,7 +53,7 @@ router.get('/:id', async (req, res) => {
            CASE WHEN r.anonymous = 1 THEN 'Anonymous' ELSE u.username END AS author,
            CASE WHEN r.anonymous = 1 THEN NULL ELSE u.avatar_url END AS author_avatar,
            u.id AS author_id,
-           c.name AS category, c.slug AS category_slug,
+           COALESCE(r.category_name, c.name) AS category, c.slug AS category_slug,
            COUNT(DISTINCT l.id) AS like_count,
            COUNT(DISTINCT cm.id) AS comment_count
     FROM recipes r
@@ -92,10 +92,10 @@ router.post('/', authenticate, async (req, res) => {
     await conn.beginTransaction();
 
     const [result] = await conn.query(
-      `INSERT INTO recipes (user_id, category_id, title, description,
+      `INSERT INTO recipes (user_id, category_id, category_name, title, description,
         prep_time_mins, cook_time_mins, servings, estimated_cost, image_url)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [req.user.id, category_id, title, description,
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [req.user.id, category_id, category || null, title, description,
        prep_time_mins, cook_time_mins, servings, estimated_cost, image_url]
     );
     const recipeId = result.insertId;
@@ -217,9 +217,10 @@ router.put('/:id', authenticate, async (req, res) => {
     await db.query(
       `UPDATE recipes SET title=COALESCE(?,title), description=COALESCE(?,description),
        estimated_cost=COALESCE(?,estimated_cost), category_id=COALESCE(?,category_id),
+       category_name=COALESCE(?,category_name),
        servings=COALESCE(?,servings), prep_time_mins=COALESCE(?,prep_time_mins),
        cook_time_mins=COALESCE(?,cook_time_mins), updated_at=NOW() WHERE id=?`,
-      [title,description,estimated_cost,category_id,servings,prep_time_mins,cook_time_mins,req.params.id]
+      [title,description,estimated_cost,category_id,req.body.category||null,servings,prep_time_mins,cook_time_mins,req.params.id]
     );
     res.json({ message: 'Recipe updated' });
   } catch (err) { res.status(500).json({ error: err.message }); }
