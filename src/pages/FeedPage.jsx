@@ -1,13 +1,126 @@
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, useCallback } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import styles from './FeedPage.module.css'
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:4000'
 
 const CATEGORIES = ['All','Breakfast','Rice Dishes','Soups','Ulam','Merienda','One-Pan','Snacks']
+
+const CATEGORY_LIST = ['Breakfast','Rice Dishes','Soups','Ulam','Merienda','One-Pan','Snacks']
+
+function EditRecipeModal({ recipe, token, onClose, onSaved }) {
+  const [form, setForm] = useState({
+    title:          recipe.title || '',
+    description:    recipe.description || '',
+    estimated_cost: recipe.estimated_cost || '',
+    servings:       recipe.servings || 1,
+    prep_time_mins: recipe.prep_time_mins || 0,
+    cook_time_mins: recipe.cook_time_mins || 0,
+    category:       recipe.category || '',
+  })
+  const [loading, setLoading] = useState(false)
+  const [error,   setError]   = useState('')
+
+  const sf = (k, v) => setForm(f => ({ ...f, [k]: v }))
+
+  const submit = async e => {
+    e.preventDefault(); setError(''); setLoading(true)
+    try {
+      const res = await fetch(`${API}/api/recipes/${recipe.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({
+          ...form,
+          estimated_cost: Number(form.estimated_cost) || 0,
+          servings:       Number(form.servings) || 1,
+          prep_time_mins: Number(form.prep_time_mins) || 0,
+          cook_time_mins: Number(form.cook_time_mins) || 0,
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok) { setError(data.error || 'Failed to update'); return }
+      onSaved({ ...recipe, ...form })
+      onClose()
+    } catch { setError('Network error') }
+    finally { setLoading(false) }
+  }
+
+  return (
+    <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.5)',display:'flex',alignItems:'center',justifyContent:'center',zIndex:1000,padding:'1rem'}}>
+      <div style={{background:'#fff',borderRadius:'12px',padding:'2rem',width:'100%',maxWidth:'500px',maxHeight:'90vh',overflowY:'auto'}}>
+        <h3 style={{marginBottom:'1rem',fontSize:'1.1rem'}}>✏️ Edit Recipe</h3>
+        {error && <p style={{color:'#b91c1c',background:'#fef2f2',padding:'0.5rem 0.75rem',borderRadius:'6px',marginBottom:'0.75rem',fontSize:'0.85rem'}}>⚠ {error}</p>}
+        <form onSubmit={submit} style={{display:'flex',flexDirection:'column',gap:'0.75rem'}}>
+          <div style={{display:'flex',flexDirection:'column',gap:'0.25rem'}}>
+            <label style={{fontSize:'0.82rem',fontWeight:600}}>Title *</label>
+            <input required value={form.title} onChange={e=>sf('title',e.target.value)}
+              style={{padding:'0.55rem 0.8rem',border:'1.5px solid #e2e8f0',borderRadius:'7px',fontSize:'0.9rem'}} />
+          </div>
+          <div style={{display:'flex',flexDirection:'column',gap:'0.25rem'}}>
+            <label style={{fontSize:'0.82rem',fontWeight:600}}>Category</label>
+            <select value={form.category} onChange={e=>sf('category',e.target.value)}
+              style={{padding:'0.55rem 0.8rem',border:'1.5px solid #e2e8f0',borderRadius:'7px',fontSize:'0.9rem'}}>
+              <option value="">Select…</option>
+              {CATEGORY_LIST.map(c => <option key={c} value={c}>{c}</option>)}
+            </select>
+          </div>
+          <div style={{display:'flex',flexDirection:'column',gap:'0.25rem'}}>
+            <label style={{fontSize:'0.82rem',fontWeight:600}}>Description</label>
+            <textarea rows={3} value={form.description} onChange={e=>sf('description',e.target.value)}
+              style={{padding:'0.55rem 0.8rem',border:'1.5px solid #e2e8f0',borderRadius:'7px',fontSize:'0.9rem',fontFamily:'inherit',resize:'vertical'}} />
+          </div>
+          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'0.75rem'}}>
+            <div style={{display:'flex',flexDirection:'column',gap:'0.25rem'}}>
+              <label style={{fontSize:'0.82rem',fontWeight:600}}>Cost (₱)</label>
+              <input type="number" value={form.estimated_cost} onChange={e=>sf('estimated_cost',e.target.value)}
+                style={{padding:'0.55rem 0.8rem',border:'1.5px solid #e2e8f0',borderRadius:'7px',fontSize:'0.9rem'}} />
+            </div>
+            <div style={{display:'flex',flexDirection:'column',gap:'0.25rem'}}>
+              <label style={{fontSize:'0.82rem',fontWeight:600}}>Servings</label>
+              <input type="number" min="1" value={form.servings} onChange={e=>sf('servings',e.target.value)}
+                style={{padding:'0.55rem 0.8rem',border:'1.5px solid #e2e8f0',borderRadius:'7px',fontSize:'0.9rem'}} />
+            </div>
+            <div style={{display:'flex',flexDirection:'column',gap:'0.25rem'}}>
+              <label style={{fontSize:'0.82rem',fontWeight:600}}>Prep (mins)</label>
+              <input type="number" min="0" value={form.prep_time_mins} onChange={e=>sf('prep_time_mins',e.target.value)}
+                style={{padding:'0.55rem 0.8rem',border:'1.5px solid #e2e8f0',borderRadius:'7px',fontSize:'0.9rem'}} />
+            </div>
+            <div style={{display:'flex',flexDirection:'column',gap:'0.25rem'}}>
+              <label style={{fontSize:'0.82rem',fontWeight:600}}>Cook (mins)</label>
+              <input type="number" min="0" value={form.cook_time_mins} onChange={e=>sf('cook_time_mins',e.target.value)}
+                style={{padding:'0.55rem 0.8rem',border:'1.5px solid #e2e8f0',borderRadius:'7px',fontSize:'0.9rem'}} />
+            </div>
+          </div>
+          <div style={{display:'flex',gap:'0.75rem',justifyContent:'flex-end',marginTop:'0.5rem'}}>
+            <button type="button" onClick={onClose}
+              style={{padding:'0.55rem 1.25rem',border:'1.5px solid #e2e8f0',borderRadius:'8px',background:'#fff',cursor:'pointer'}}>
+              Cancel
+            </button>
+            <button type="submit" disabled={loading}
+              style={{padding:'0.55rem 1.25rem',border:'none',borderRadius:'8px',background:'var(--terra,#C1502A)',color:'#fff',fontWeight:600,cursor:'pointer'}}>
+              {loading ? 'Saving…' : 'Save Changes'}
+            </button>
+          </div>
+        </form>
+      </div>
+      {editRecipe && (
+        <EditRecipeModal
+          recipe={editRecipe}
+          token={localStorage.getItem('token')}
+          onClose={() => setEditRecipe(null)}
+          onSaved={updated => {
+            setRecipes(rs => rs.map(r => r.id === updated.id ? {...r, ...updated} : r))
+            setEditRecipe(null)
+          }}
+        />
+      )}
+    </div>
+  )
+}
+
 const TABS = ['🔥 Hot','✨ New','👑 Top','🏆 Challenges']
 
-function RecipeCard({ recipe, liked, onLike, currentUser, onDelete }) {
+function RecipeCard({ recipe, liked, onLike, currentUser, onDelete, onEdit }) {
   const totalMins = (recipe.prep_time_mins || 0) + (recipe.cook_time_mins || 0)
   const timeStr   = totalMins ? `${totalMins} mins` : '—'
 
@@ -36,10 +149,12 @@ function RecipeCard({ recipe, liked, onLike, currentUser, onDelete }) {
             </button>
             <button className={styles.actionBtn}>💬 {recipe.comment_count || 0}</button>
             <button className={styles.actionBtn}>🔗</button>
-            {(currentUser?.username === recipe.author || currentUser?.role === 'admin') && (
+            {(currentUser?.username === recipe.author || currentUser?.role === 'admin') && (<>
+              <button className={styles.editRecipeBtn}
+                onClick={() => onEdit && onEdit(recipe)}>✏️</button>
               <button className={styles.deleteRecipeBtn}
                 onClick={() => onDelete && onDelete(recipe)}>🗑</button>
-            )}
+            </>)}
           </div>
           <div className={styles.author}>
             <span className={styles.avatar}>{(recipe.author || '?').slice(0,2).toUpperCase()}</span>
@@ -58,6 +173,7 @@ export default function FeedPage() {
   const [likes,     setLikes]     = useState({})
   const [search,    setSearch]    = useState('')
   const [filterCat, setFilterCat] = useState('All')
+  const [editRecipe, setEditRecipe] = useState(null)
   const navigate = useNavigate()
   const currentUser = (() => { try { return JSON.parse(atob(localStorage.getItem('token')?.split('.')[1] || '')) } catch { return null } })()
   const location = useLocation()
@@ -170,7 +286,8 @@ export default function FeedPage() {
                 liked={!!likes[r.id]}
                 onLike={id => setLikes(p => ({...p,[id]:!p[id]}))}
                 currentUser={currentUser}
-                onDelete={handleDeleteRecipe} />
+                onDelete={handleDeleteRecipe}
+                onEdit={setEditRecipe} />
             ))}
           </div>
         )}

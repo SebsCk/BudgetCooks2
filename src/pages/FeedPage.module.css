@@ -33,3 +33,5 @@
 
 .deleteRecipeBtn { background: none; border: 1px solid #ddd; color: #c0392b; border-radius: 6px; padding: 0.25rem 0.5rem; font-size: 0.78rem; cursor: pointer; margin-left: 0.25rem; }
 .deleteRecipeBtn:hover { background: #c0392b; color: #fff; border-color: #c0392b; }
+.editRecipeBtn { background: none; border: 1px solid #ddd; color: #2563eb; border-radius: 6px; padding: 0.25rem 0.5rem; font-size: 0.78rem; cursor: pointer; margin-left: 0.25rem; }
+.editRecipeBtn:hover { background: #2563eb; color: #fff; border-color: #2563eb; }
