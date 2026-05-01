@@ -178,4 +178,49 @@ router.post('/:id/report', authenticate, async (req, res) => {
   res.json({ message: 'Report submitted' });
 });
 
+
+// DELETE /api/recipes/:id — author or admin
+router.delete('/:id', authenticate, async (req, res) => {
+  try {
+    const [rows] = await db.query('SELECT user_id FROM recipes WHERE id = ?', [req.params.id]);
+    if (!rows.length) return res.status(404).json({ error: 'Recipe not found' });
+    if (rows[0].user_id !== req.user.id && req.user.role !== 'admin')
+      return res.status(403).json({ error: 'Not authorized' });
+    await db.query('DELETE FROM recipes WHERE id = ?', [req.params.id]);
+    res.json({ message: 'Recipe deleted' });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
 module.exports = router;
+
+// DELETE /api/recipes/:id — author or admin can delete
+const { authorizeAdmin } = require('../middleware/auth');
+router.delete('/:id', authenticate, async (req, res) => {
+  try {
+    const [rows] = await db.query('SELECT user_id FROM recipes WHERE id = ?', [req.params.id]);
+    if (!rows.length) return res.status(404).json({ error: 'Recipe not found' });
+    if (rows[0].user_id !== req.user.id && req.user.role !== 'admin')
+      return res.status(403).json({ error: 'Not authorized' });
+    await db.query('DELETE FROM recipes WHERE id = ?', [req.params.id]);
+    res.json({ message: 'Recipe deleted' });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// PUT /api/recipes/:id — full edit for author or admin
+router.put('/:id', authenticate, async (req, res) => {
+  try {
+    const [rows] = await db.query('SELECT user_id FROM recipes WHERE id = ?', [req.params.id]);
+    if (!rows.length) return res.status(404).json({ error: 'Recipe not found' });
+    if (rows[0].user_id !== req.user.id && req.user.role !== 'admin')
+      return res.status(403).json({ error: 'Not authorized' });
+    const { title, description, estimated_cost, category_id, servings, prep_time_mins, cook_time_mins } = req.body;
+    await db.query(
+      `UPDATE recipes SET title=COALESCE(?,title), description=COALESCE(?,description),
+       estimated_cost=COALESCE(?,estimated_cost), category_id=COALESCE(?,category_id),
+       servings=COALESCE(?,servings), prep_time_mins=COALESCE(?,prep_time_mins),
+       cook_time_mins=COALESCE(?,cook_time_mins), updated_at=NOW() WHERE id=?`,
+      [title,description,estimated_cost,category_id,servings,prep_time_mins,cook_time_mins,req.params.id]
+    );
+    res.json({ message: 'Recipe updated' });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});

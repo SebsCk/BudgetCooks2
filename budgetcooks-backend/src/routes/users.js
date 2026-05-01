@@ -82,3 +82,31 @@ router.patch('/admin/reports/:id/resolve', authenticate, authorizeAdmin, async (
 });
 
 module.exports = router;
+
+// GET /api/users — admin: list all users
+router.get('/', authenticate, authorizeAdmin, async (req, res) => {
+  try {
+    const [rows] = await db.query(
+      'SELECT id, username, email, role, created_at FROM users ORDER BY created_at DESC'
+    );
+    res.json(rows);
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// PUT /api/users/:id/role — admin: change role
+router.put('/:id/role', authenticate, authorizeAdmin, async (req, res) => {
+  const { role } = req.body;
+  if (!['member','admin'].includes(role)) return res.status(400).json({ error: 'Invalid role' });
+  try {
+    await db.query('UPDATE users SET role = ? WHERE id = ?', [role, req.params.id]);
+    res.json({ message: 'Role updated' });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// DELETE /api/users/:id — admin: delete user
+router.delete('/:id', authenticate, authorizeAdmin, async (req, res) => {
+  try {
+    await db.query('DELETE FROM users WHERE id = ?', [req.params.id]);
+    res.json({ message: 'User deleted' });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});

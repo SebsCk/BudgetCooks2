@@ -7,7 +7,7 @@ const API = import.meta.env.VITE_API_URL || 'http://localhost:4000'
 const CATEGORIES = ['All','Breakfast','Rice Dishes','Soups','Ulam','Merienda','One-Pan','Snacks']
 const TABS = ['🔥 Hot','✨ New','👑 Top','🏆 Challenges']
 
-function RecipeCard({ recipe, liked, onLike }) {
+function RecipeCard({ recipe, liked, onLike, currentUser, onDelete }) {
   const totalMins = (recipe.prep_time_mins || 0) + (recipe.cook_time_mins || 0)
   const timeStr   = totalMins ? `${totalMins} mins` : '—'
 
@@ -36,6 +36,10 @@ function RecipeCard({ recipe, liked, onLike }) {
             </button>
             <button className={styles.actionBtn}>💬 {recipe.comment_count || 0}</button>
             <button className={styles.actionBtn}>🔗</button>
+            {(currentUser?.username === recipe.author || currentUser?.role === 'admin') && (
+              <button className={styles.deleteRecipeBtn}
+                onClick={() => onDelete && onDelete(recipe)}>🗑</button>
+            )}
           </div>
           <div className={styles.author}>
             <span className={styles.avatar}>{(recipe.author || '?').slice(0,2).toUpperCase()}</span>
@@ -55,6 +59,7 @@ export default function FeedPage() {
   const [search,    setSearch]    = useState('')
   const [filterCat, setFilterCat] = useState('All')
   const navigate = useNavigate()
+  const currentUser = (() => { try { return JSON.parse(atob(localStorage.getItem('token')?.split('.')[1] || '')) } catch { return null } })()
   const location = useLocation()
 
   const params      = new URLSearchParams(location.search)
@@ -91,6 +96,19 @@ export default function FeedPage() {
   }, [recipes, filterCat, search, urlSearch, activeTab])
 
   const hasFilter = search || urlSearch || filterCat !== 'All'
+
+  const handleDeleteRecipe = async (recipe) => {
+    if (!window.confirm(`Delete "${recipe.title}"?`)) return
+    const token = localStorage.getItem('token')
+    try {
+      const res = await fetch(`${API}/api/recipes/${recipe.id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      if (res.ok) setRecipes(rs => rs.filter(r => r.id !== recipe.id))
+      else alert('Failed to delete recipe')
+    } catch { alert('Network error') }
+  }
 
   return (
     <div className={styles.page}>
@@ -150,7 +168,9 @@ export default function FeedPage() {
             {displayed.map(r => (
               <RecipeCard key={r.id} recipe={r}
                 liked={!!likes[r.id]}
-                onLike={id => setLikes(p => ({...p,[id]:!p[id]}))} />
+                onLike={id => setLikes(p => ({...p,[id]:!p[id]}))}
+                currentUser={currentUser}
+                onDelete={handleDeleteRecipe} />
             ))}
           </div>
         )}

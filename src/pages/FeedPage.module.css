@@ -30,3 +30,6 @@
 .liked { color: var(--terra); }
 .author { display: flex; align-items: center; gap: 0.4rem; font-size: 0.82rem; color: var(--warm-gray); margin-left: auto; }
 .avatar { width: 24px; height: 24px; border-radius: 50%; background: var(--terra); color: var(--white); display: inline-flex; align-items: center; justify-content: center; font-size: 0.65rem; font-weight: 600; }
+
+.deleteRecipeBtn { background: none; border: 1px solid #ddd; color: #c0392b; border-radius: 6px; padding: 0.25rem 0.5rem; font-size: 0.78rem; cursor: pointer; margin-left: 0.25rem; }
+.deleteRecipeBtn:hover { background: #c0392b; color: #fff; border-color: #c0392b; }

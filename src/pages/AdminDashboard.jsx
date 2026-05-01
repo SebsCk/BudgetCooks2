@@ -99,7 +99,7 @@ export default function AdminDashboard() {
       try {
         const [sRes, uRes, aRes, fRes, dRes] = await Promise.all([
           fetch(`${API}/api/activity/stats`,     {headers:authH}),
-          fetch(`${API}/api/activity/users-list`,{headers:authH}),
+          fetch(`${API}/api/users`,{headers:authH}),
           fetch(`${API}/api/activity`,           {headers:authH}),
           fetch(`${API}/api/forums`),
           fetch(`${API}/api/activity/deletions`, {headers:authH}),
