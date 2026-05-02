@@ -27,7 +27,7 @@ router.get('/', async (req, res) => {
            r.image_url, r.created_at,
            CASE WHEN r.anonymous = 1 THEN 'Anonymous' ELSE u.username END AS author,
            CASE WHEN r.anonymous = 1 THEN NULL ELSE u.avatar_url END AS author_avatar,
-           COALESCE(r.category_name, c.name) AS category,
+           c.name AS category,
            COUNT(DISTINCT l.id) AS like_count,
            COUNT(DISTINCT cm.id) AS comment_count
     FROM recipes r
@@ -53,7 +53,7 @@ router.get('/:id', async (req, res) => {
            CASE WHEN r.anonymous = 1 THEN 'Anonymous' ELSE u.username END AS author,
            CASE WHEN r.anonymous = 1 THEN NULL ELSE u.avatar_url END AS author_avatar,
            u.id AS author_id,
-           COALESCE(r.category_name, c.name) AS category, c.slug AS category_slug,
+           c.name AS category, c.slug AS category_slug,
            COUNT(DISTINCT l.id) AS like_count,
            COUNT(DISTINCT cm.id) AS comment_count
     FROM recipes r
@@ -82,20 +82,30 @@ router.get('/:id', async (req, res) => {
 
 // POST /api/recipes — create recipe
 router.post('/', authenticate, async (req, res) => {
-  const { title, description, category_id, prep_time_mins, cook_time_mins,
+  let { title, description, category_id, category, prep_time_mins, cook_time_mins,
           servings, estimated_cost, image_url, steps = [], ingredients = [] } = req.body;
 
   if (!title) return res.status(400).json({ error: 'Title is required' });
+
+  // Look up category_id from category name if not provided
+  if (!category_id && category) {
+    try {
+      const [cats] = await db.query(
+        'SELECT id FROM categories WHERE name = ? LIMIT 1', [category]
+      );
+      if (cats.length) category_id = cats[0].id;
+    } catch {}
+  }
 
   const conn = await db.getConnection();
   try {
     await conn.beginTransaction();
 
     const [result] = await conn.query(
-      `INSERT INTO recipes (user_id, category_id, category_name, title, description,
+      `INSERT INTO recipes (user_id, category_id, title, description,
         prep_time_mins, cook_time_mins, servings, estimated_cost, image_url)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [req.user.id, category_id, category || null, title, description,
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [req.user.id, category_id, title, description,
        prep_time_mins, cook_time_mins, servings, estimated_cost, image_url]
     );
     const recipeId = result.insertId;
@@ -217,10 +227,9 @@ router.put('/:id', authenticate, async (req, res) => {
     await db.query(
       `UPDATE recipes SET title=COALESCE(?,title), description=COALESCE(?,description),
        estimated_cost=COALESCE(?,estimated_cost), category_id=COALESCE(?,category_id),
-       category_name=COALESCE(?,category_name),
        servings=COALESCE(?,servings), prep_time_mins=COALESCE(?,prep_time_mins),
        cook_time_mins=COALESCE(?,cook_time_mins), updated_at=NOW() WHERE id=?`,
-      [title,description,estimated_cost,category_id,req.body.category||null,servings,prep_time_mins,cook_time_mins,req.params.id]
+      [title,description,estimated_cost,category_id,servings,prep_time_mins,cook_time_mins,req.params.id]
     );
     res.json({ message: 'Recipe updated' });
   } catch (err) { res.status(500).json({ error: err.message }); }

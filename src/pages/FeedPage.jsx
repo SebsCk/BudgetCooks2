@@ -26,12 +26,19 @@ function EditRecipeModal({ recipe, token, onClose, onSaved }) {
   const submit = async e => {
     e.preventDefault(); setError(''); setLoading(true)
     try {
+      // Look up category_id from name
+      let category_id = null
+      try {
+        const cats = await fetch(`${API}/api/categories`).then(r => r.json())
+        const match = cats.find(c => c.name === form.category)
+        if (match) category_id = match.id
+      } catch {}
       const res = await fetch(`${API}/api/recipes/${recipe.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({
           ...form,
-          category:       form.category,
+          category_id,
           estimated_cost: Number(form.estimated_cost) || 0,
           servings:       Number(form.servings) || 1,
           prep_time_mins: Number(form.prep_time_mins) || 0,
