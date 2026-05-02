@@ -263,7 +263,7 @@ function RecipeCard({ recipe, liked, onLike, currentUser, onDelete, onEdit }) {
           <div className={styles.cost}>₱{recipe.estimated_cost || '—'} <span>/ batch</span></div>
           <div className={styles.actions}>
             <button className={`${styles.actionBtn} ${liked ? styles.liked : ''}`} onClick={() => onLike(recipe.id)}>
-              {liked ? '❤️' : '🤍'} {(recipe.like_count || 0) + (liked ? 1 : 0)}
+              {liked ? '❤️' : '🤍'} {(parseInt(recipe.like_count) || 0) + (liked ? 1 : 0)}
             </button>
             <button className={`${styles.actionBtn} ${showComments ? styles.commentActive : ''}`} onClick={toggleComments}>
               💬 {commentCount}
@@ -435,7 +435,21 @@ export default function FeedPage() {
             {displayed.map(r => (
               <RecipeCard key={r.id} recipe={r}
                 liked={!!likes[r.id]}
-                onLike={id => setLikes(p => ({...p,[id]:!p[id]}))}
+                onLike={async (id) => {
+                  const token = localStorage.getItem('token')
+                  if (!token) { navigate('/login'); return }
+                  // optimistic toggle
+                  setLikes(p => ({...p,[id]:!p[id]}))
+                  try {
+                    await fetch(`${API}/api/recipes/${id}/like`, {
+                      method: 'POST',
+                      headers: { Authorization: `Bearer ${token}` }
+                    })
+                  } catch {
+                    // revert on failure
+                    setLikes(p => ({...p,[id]:!p[id]}))
+                  }
+                }}
                 currentUser={currentUser}
                 onDelete={handleDeleteRecipe}
                 onEdit={setEditRecipe} />

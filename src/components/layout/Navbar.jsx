@@ -52,7 +52,7 @@ export default function Navbar() {
         <Link to="/" className={styles.logo}>Budget<span>Cooks</span></Link>
 
         <ul className={`${styles.links} ${menuOpen ? styles.open : ''}`}>
-          {links.map(l => (
+          {links.filter(l => !(l.label === 'About' && user)).map(l => (
             <li key={l.label}>
               <Link to={l.to} onClick={() => setMenuOpen(false)}
                 className={location.pathname === l.to ? styles.activeLink : ''}>
