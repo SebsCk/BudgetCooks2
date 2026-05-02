@@ -289,6 +289,17 @@ export default function FeedPage() {
           </div>
         )}
       </div>
+      {editRecipe && (
+        <EditRecipeModal
+          recipe={editRecipe}
+          token={localStorage.getItem('token')}
+          onClose={() => setEditRecipe(null)}
+          onSaved={updated => {
+            setRecipes(rs => rs.map(r => r.id === updated.id ? { ...r, ...updated } : r))
+            setEditRecipe(null)
+          }}
+        />
+      )}
     </div>
   )
 }
