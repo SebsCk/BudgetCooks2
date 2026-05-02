@@ -13,7 +13,7 @@ router.get('/stats', authenticate, authorizeAdmin, async (req, res) => {
     let totalLikes = 0;
     try { const [[likes]] = await db.query('SELECT COUNT(*) AS c FROM likes'); totalLikes = likes.c; } catch {}
     let openReports = 0;
-    try { const [[reports]] = await db.query("SELECT COUNT(*) AS c FROM reports WHERE status = 'open'"); openReports = reports.c; } catch {}
+    try { const [[reports]] = await db.query('SELECT COUNT(*) AS c FROM reports WHERE resolved = 0'); openReports = reports.c; } catch {}
     res.json({
       totalUsers: users.c,
       totalRecipes: recipes.c,

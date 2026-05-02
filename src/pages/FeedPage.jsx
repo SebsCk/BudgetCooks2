@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useCallback } from 'react'
+import { useState, useMemo, useEffect, useCallback, useRef } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import styles from './FeedPage.module.css'
 
@@ -117,15 +117,136 @@ function EditRecipeModal({ recipe, token, onClose, onSaved }) {
 
 const TABS = ['🔥 Hot','✨ New','👑 Top','🏆 Challenges']
 
+function CommentThread({ comment, token, onReply, currentUser }) {
+  const [showReply, setShowReply] = useState(false)
+  const [replyText, setReplyText] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+
+  const submitReply = async () => {
+    if (!replyText.trim()) return
+    setSubmitting(true)
+    try {
+      const res = await fetch(`${API}/api/comments`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ recipe_id: comment.recipe_id || comment.id, body: replyText.trim(), parent_id: comment.id }),
+      })
+      if (res.ok) {
+        const data = await res.json()
+        onReply({ id: data.id, body: replyText.trim(), parent_id: comment.id, author: currentUser?.username || '?', replies: [], created_at: new Date().toISOString() })
+        setReplyText('')
+        setShowReply(false)
+      }
+    } finally { setSubmitting(false) }
+  }
+
+  return (
+    <div className={styles.comment}>
+      <div className={styles.commentAvatar}>{(comment.author||'?').slice(0,2).toUpperCase()}</div>
+      <div className={styles.commentBody}>
+        <div className={styles.commentMeta}>
+          <strong>{comment.author}</strong>
+          <span className={styles.commentTime}>{new Date(comment.created_at).toLocaleDateString()}</span>
+        </div>
+        <p className={styles.commentText}>{comment.body}</p>
+        {token && !comment.parent_id && (
+          <button className={styles.replyBtn} onClick={() => setShowReply(v => !v)}>
+            {showReply ? 'Cancel' : '↩ Reply'}
+          </button>
+        )}
+        {showReply && (
+          <div className={styles.replyBox}>
+            <input placeholder="Write a reply…" value={replyText}
+              onChange={e => setReplyText(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && !e.shiftKey && submitReply()}
+              className={styles.replyInput} />
+            <button className={styles.replySubmit} onClick={submitReply} disabled={submitting || !replyText.trim()}>
+              {submitting ? '…' : 'Post'}
+            </button>
+          </div>
+        )}
+        {comment.replies?.map(r => (
+          <div key={r.id} className={styles.nestedComment}>
+            <div className={styles.commentAvatar} style={{width:26,height:26,fontSize:'0.68rem'}}>{(r.author||'?').slice(0,2).toUpperCase()}</div>
+            <div className={styles.commentBody}>
+              <div className={styles.commentMeta}>
+                <strong>{r.author}</strong>
+                <span className={styles.commentTime}>{new Date(r.created_at).toLocaleDateString()}</span>
+              </div>
+              <p className={styles.commentText}>{r.body}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 function RecipeCard({ recipe, liked, onLike, currentUser, onDelete, onEdit }) {
   const totalMins = (recipe.prep_time_mins || 0) + (recipe.cook_time_mins || 0)
   const timeStr   = totalMins ? `${totalMins} mins` : '—'
+  const token     = localStorage.getItem('token')
+
+  const [showComments, setShowComments] = useState(false)
+  const [comments,     setComments]     = useState([])
+  const [commentsLoaded, setCommentsLoaded] = useState(false)
+  const [commentText,  setCommentText]  = useState('')
+  const [posting,      setPosting]      = useState(false)
+  const [commentCount, setCommentCount] = useState(recipe.comment_count || 0)
+
+  const loadComments = async () => {
+    if (commentsLoaded) return
+    try {
+      const res = await fetch(`${API}/api/comments?recipe_id=${recipe.id}`)
+      if (res.ok) { setComments(await res.json()); setCommentsLoaded(true) }
+    } catch {}
+  }
+
+  const toggleComments = () => {
+    if (!showComments) loadComments()
+    setShowComments(v => !v)
+  }
+
+  const postComment = async () => {
+    if (!commentText.trim() || !token) return
+    setPosting(true)
+    try {
+      const res = await fetch(`${API}/api/comments`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ recipe_id: recipe.id, body: commentText.trim() }),
+      })
+      if (res.ok) {
+        const data = await res.json()
+        const newComment = { id: data.id, body: commentText.trim(), parent_id: null, author: currentUser?.username || '?', replies: [], created_at: new Date().toISOString() }
+        setComments(cs => [...cs, newComment])
+        setCommentCount(n => n + 1)
+        setCommentText('')
+      }
+    } finally { setPosting(false) }
+  }
+
+  const handleReply = (reply) => {
+    setComments(cs => cs.map(c => c.id === reply.parent_id ? { ...c, replies: [...(c.replies||[]), reply] } : c))
+    setCommentCount(n => n + 1)
+  }
+
+  const handleCopyLink = () => {
+    navigator.clipboard.writeText(`${window.location.origin}/feed?recipe=${recipe.id}`).catch(() => {})
+  }
 
   return (
     <article className={styles.card}>
-      <div className={styles.cardImg}>
-        <span>{recipe.emoji || '🍽'}</span>
-      </div>
+      {recipe.image_url && (
+        <div className={styles.cardImgPhoto}>
+          <img src={recipe.image_url} alt={recipe.title} className={styles.recipePhoto} />
+        </div>
+      )}
+      {!recipe.image_url && (
+        <div className={styles.cardImg}>
+          <span>{recipe.emoji || '🍽'}</span>
+        </div>
+      )}
       <div className={styles.cardBody}>
         <div className={styles.tags}>
           {recipe.category && <span className="tag">{recipe.category}</span>}
@@ -144,8 +265,10 @@ function RecipeCard({ recipe, liked, onLike, currentUser, onDelete, onEdit }) {
             <button className={`${styles.actionBtn} ${liked ? styles.liked : ''}`} onClick={() => onLike(recipe.id)}>
               {liked ? '❤️' : '🤍'} {(recipe.like_count || 0) + (liked ? 1 : 0)}
             </button>
-            <button className={styles.actionBtn}>💬 {recipe.comment_count || 0}</button>
-            <button className={styles.actionBtn}>🔗</button>
+            <button className={`${styles.actionBtn} ${showComments ? styles.commentActive : ''}`} onClick={toggleComments}>
+              💬 {commentCount}
+            </button>
+            <button className={styles.actionBtn} onClick={handleCopyLink} title="Copy link">🔗</button>
             {(currentUser?.username === recipe.author || currentUser?.role === 'admin') && (<>
               <button className={styles.editRecipeBtn}
                 onClick={() => onEdit && onEdit(recipe)}>✏️</button>
@@ -158,6 +281,37 @@ function RecipeCard({ recipe, liked, onLike, currentUser, onDelete, onEdit }) {
             {recipe.author || 'Anonymous'}
           </div>
         </div>
+
+        {/* ── Comment Panel ── */}
+        {showComments && (
+          <div className={styles.commentPanel}>
+            {comments.length === 0 && commentsLoaded && (
+              <p className={styles.noComments}>No comments yet. Be the first!</p>
+            )}
+            {comments.map(c => (
+              <CommentThread key={c.id} comment={{...c, recipe_id: recipe.id}} token={token} onReply={handleReply} currentUser={currentUser} />
+            ))}
+            {token ? (
+              <div className={styles.commentInputRow}>
+                <div className={styles.commentAvatar} style={{flexShrink:0}}>{(currentUser?.username||'?').slice(0,2).toUpperCase()}</div>
+                <input
+                  className={styles.commentInput}
+                  placeholder="Write a comment…"
+                  value={commentText}
+                  onChange={e => setCommentText(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && !e.shiftKey && postComment()}
+                />
+                <button className={styles.commentSubmit} onClick={postComment} disabled={posting || !commentText.trim()}>
+                  {posting ? '…' : 'Post'}
+                </button>
+              </div>
+            ) : (
+              <p className={styles.loginPrompt}>
+                <a href="/login">Log in</a> to leave a comment.
+              </p>
+            )}
+          </div>
+        )}
       </div>
     </article>
   )

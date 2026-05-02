@@ -86,6 +86,8 @@ export default function AdminDashboard() {
   const [activity,  setActivity]  = useState([])
   const [forums,    setForums]    = useState([])
   const [deletions, setDeletions] = useState([])
+  const [reports,   setReports]   = useState([])
+  const [favorites, setFavorites] = useState([])
   const [actFilter, setActFilter] = useState('All')
   const [activeTab, setActiveTab] = useState('overview')
   const [userSearch,setUserSearch]= useState('')
@@ -97,18 +99,22 @@ export default function AdminDashboard() {
     async function load() {
       setLoading(true)
       try {
-        const [sRes, uRes, aRes, fRes, dRes] = await Promise.all([
+        const [sRes, uRes, aRes, fRes, dRes, rRes, favRes] = await Promise.all([
           fetch(`${API}/api/activity/stats`,     {headers:authH}),
           fetch(`${API}/api/users`,{headers:authH}),
           fetch(`${API}/api/activity`,           {headers:authH}),
           fetch(`${API}/api/forums`),
           fetch(`${API}/api/activity/deletions`, {headers:authH}),
+          fetch(`${API}/api/users/admin/reports`,   {headers:authH}),
+          fetch(`${API}/api/users/admin/favorites`,  {headers:authH}),
         ])
         if (sRes.ok) setStats(await sRes.json())
         if (uRes.ok) setUsers(await uRes.json())
         if (aRes.ok) setActivity(await aRes.json())
         if (fRes.ok) setForums(await fRes.json())
         if (dRes.ok) setDeletions(await dRes.json())
+        if (rRes.ok) setReports(await rRes.json())
+        if (favRes.ok) setFavorites(await favRes.json())
       } catch (err) { console.error(err) }
       finally { setLoading(false) }
     }
@@ -162,6 +168,8 @@ export default function AdminDashboard() {
     {id:'notifications',label:'🔔 Activity'},
     {id:'users',        label:'👥 Users'},
     {id:'forums',       label:'💬 Forums'},
+    {id:'reports',      label:`🚩 Reports${reports.length ? ` (${reports.length})` : ''}`},
+    {id:'favorites',    label:'❤️ Favorites'},
     {id:'deletions',    label:'🗑 Deletions'},
     {id:'create',       label:'➕ Create Account'},
   ]
@@ -335,6 +343,108 @@ export default function AdminDashboard() {
                             setForums(fs => fs.filter(x => x.id !== f.id))
                           }}>🗑 Delete</button>
                         </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ── REPORTS ── */}
+        {activeTab === 'reports' && (
+          <div>
+            <p style={{marginBottom:'1rem',color:'var(--warm-gray)',fontSize:'0.9rem'}}>
+              {reports.length} unresolved report{reports.length !== 1 ? 's' : ''} — click Resolve to dismiss
+            </p>
+            {reports.length === 0 ? (
+              <p className={styles.empty}>✅ No open reports — all clear!</p>
+            ) : (
+              <div className={styles.tableWrap}>
+                <table className={styles.table}>
+                  <thead>
+                    <tr>
+                      <th>Type</th>
+                      <th>Content</th>
+                      <th>Reported By</th>
+                      <th>Reason</th>
+                      <th>Date</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {reports.map(r => (
+                      <tr key={r.id}>
+                        <td>
+                          <span className={styles.rolePill}>
+                            {r.recipe_id ? '🍳 Recipe' : '💬 Comment'}
+                          </span>
+                        </td>
+                        <td style={{maxWidth:'200px',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>
+                          {r.recipe_id ? (r.recipe_title || `Recipe #${r.recipe_id}`) : (r.comment_body || `Comment #${r.comment_id}`)}
+                        </td>
+                        <td>{r.reported_by || '—'}</td>
+                        <td style={{maxWidth:'180px',fontSize:'0.82rem',color:'var(--warm-gray)'}}>{r.reason || '—'}</td>
+                        <td className={styles.dateCell}>{timeAgo(r.created_at)}</td>
+                        <td>
+                          <div className={styles.actionBtns}>
+                            {r.recipe_id && (
+                              <button className={styles.deleteBtn} onClick={async () => {
+                                if (!window.confirm('Delete this recipe?')) return
+                                await fetch(`${API}/api/users/admin/recipes/${r.recipe_id}`, {method:'DELETE',headers:authH})
+                                setReports(rs => rs.filter(x => x.id !== r.id))
+                              }}>🗑 Remove</button>
+                            )}
+                            <button className={styles.promoteBtn} onClick={async () => {
+                              await fetch(`${API}/api/users/admin/reports/${r.id}/resolve`, {method:'PATCH',headers:authH})
+                              setReports(rs => rs.filter(x => x.id !== r.id))
+                            }}>✅ Resolve</button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ── FAVORITES ── */}
+        {activeTab === 'favorites' && (
+          <div>
+            <p style={{marginBottom:'1rem',color:'var(--warm-gray)',fontSize:'0.9rem'}}>
+              Top {favorites.length} most-liked recipes across the platform
+            </p>
+            {favorites.length === 0 ? (
+              <p className={styles.empty}>No recipes with likes yet.</p>
+            ) : (
+              <div className={styles.tableWrap}>
+                <table className={styles.table}>
+                  <thead>
+                    <tr>
+                      <th>#</th>
+                      <th>Recipe</th>
+                      <th>Author</th>
+                      <th>❤️ Likes</th>
+                      <th>Cost (₱)</th>
+                      <th>Posted</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {favorites.map((f, i) => (
+                      <tr key={f.id}>
+                        <td style={{fontWeight:700,color:'var(--terra)'}}>{i + 1}</td>
+                        <td style={{fontWeight:600}}>{f.title}</td>
+                        <td>
+                          <span className={styles.rolePill}>{f.author}</span>
+                        </td>
+                        <td>
+                          <span style={{fontWeight:700,color:'#c0392b'}}>❤️ {f.like_count}</span>
+                        </td>
+                        <td>₱{f.estimated_cost || '—'}</td>
+                        <td className={styles.dateCell}>{new Date(f.created_at).toLocaleDateString()}</td>
                       </tr>
                     ))}
                   </tbody>

@@ -35,3 +35,51 @@
 .deleteRecipeBtn:hover { background: #c0392b; color: #fff; border-color: #c0392b; }
 .editRecipeBtn { background: none; border: 1px solid #ddd; color: #2563eb; border-radius: 6px; padding: 0.25rem 0.5rem; font-size: 0.78rem; cursor: pointer; margin-left: 0.25rem; }
 .editRecipeBtn:hover { background: #2563eb; color: #fff; border-color: #2563eb; }
+
+/* ── Recipe photo ── */
+.cardImgPhoto { width: 100%; max-height: 200px; overflow: hidden; border-radius: 10px 10px 0 0; }
+.recipePhoto  { width: 100%; height: 200px; object-fit: cover; display: block; }
+
+/* ── Comment panel ── */
+.commentActive { background: var(--cream) !important; color: var(--terra) !important; }
+.commentPanel {
+  border-top: 1px solid var(--cream2);
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+.noComments   { font-size: 0.85rem; color: var(--warm-gray); text-align: center; padding: 0.5rem 0; }
+.loginPrompt  { font-size: 0.83rem; color: var(--warm-gray); text-align: center; }
+.loginPrompt a { color: var(--terra); text-decoration: underline; }
+
+.comment { display: flex; gap: 0.6rem; align-items: flex-start; }
+.commentAvatar {
+  width: 30px; height: 30px; border-radius: 50%;
+  background: var(--olive); color: #fff;
+  font-size: 0.72rem; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.commentBody  { flex: 1; }
+.commentMeta  { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.15rem; }
+.commentMeta strong { font-size: 0.82rem; color: var(--charcoal); }
+.commentTime  { font-size: 0.75rem; color: var(--warm-gray); }
+.commentText  { font-size: 0.85rem; color: var(--charcoal); margin: 0; line-height: 1.45; }
+.replyBtn     { background: none; border: none; color: var(--terra); font-size: 0.78rem; cursor: pointer; padding: 0.2rem 0; margin-top: 0.2rem; }
+.replyBtn:hover { text-decoration: underline; }
+
+.nestedComment { display: flex; gap: 0.5rem; align-items: flex-start; margin-top: 0.5rem; margin-left: 0.5rem; padding-left: 0.75rem; border-left: 2px solid var(--cream2); }
+
+.replyBox      { display: flex; gap: 0.4rem; margin-top: 0.4rem; }
+.replyInput    { flex: 1; padding: 0.4rem 0.7rem; border: 1.5px solid var(--cream2); border-radius: 20px; font-size: 0.83rem; outline: none; }
+.replyInput:focus { border-color: var(--terra); }
+.replySubmit   { background: var(--terra); color: #fff; border: none; border-radius: 20px; padding: 0.35rem 0.85rem; font-size: 0.8rem; cursor: pointer; font-weight: 600; }
+.replySubmit:disabled { opacity: 0.5; cursor: default; }
+
+.commentInputRow { display: flex; gap: 0.5rem; align-items: center; margin-top: 0.25rem; }
+.commentInput  { flex: 1; padding: 0.45rem 0.85rem; border: 1.5px solid var(--cream2); border-radius: 20px; font-size: 0.85rem; outline: none; }
+.commentInput:focus { border-color: var(--terra); }
+.commentSubmit { background: var(--terra); color: #fff; border: none; border-radius: 20px; padding: 0.4rem 1rem; font-size: 0.83rem; cursor: pointer; font-weight: 600; white-space: nowrap; }
+.commentSubmit:disabled { opacity: 0.5; cursor: default; }

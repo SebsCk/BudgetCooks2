@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import styles from './ShareRecipePage.module.css'
@@ -10,6 +10,7 @@ const CATEGORIES = ['Breakfast','Rice Dishes','Soups','Ulam','Merienda','One-Pan
 const EMPTY = {
   title: '', description: '', category: '', estimated_cost: '',
   servings: '', prep_time_mins: '', cook_time_mins: '',
+  image_url: '',
   ingredients: [{ name: '', quantity: '', unit: '' }],
   steps: [{ instruction: '' }],
 }
@@ -23,6 +24,9 @@ export default function ShareRecipePage() {
   const [error,    setError]    = useState('')
   const [success,  setSuccess]  = useState(false)
   const [challenges, setChallenges] = useState([])
+  const [imagePreview, setImagePreview] = useState(null)
+  const [imageLoading, setImageLoading] = useState(false)
+  const fileInputRef = useRef(null)
 
   useEffect(() => {
     if (!user) { navigate('/login'); return }
@@ -33,6 +37,40 @@ export default function ShareRecipePage() {
   }, [user])
 
   const setField = (k, v) => setForm(f => ({ ...f, [k]: v }))
+
+  const handleImageFile = (file) => {
+    if (!file) return
+    if (!file.type.startsWith('image/')) { setError('Please select an image file (JPG, PNG, WEBP, etc.)'); return }
+    if (file.size > 5 * 1024 * 1024) { setError('Image must be under 5 MB'); return }
+    setImageLoading(true)
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      const dataUrl = e.target.result
+      setImagePreview(dataUrl)
+      setForm(f => ({ ...f, image_url: dataUrl }))
+      setImageLoading(false)
+      setError('')
+    }
+    reader.onerror = () => { setError('Failed to read image'); setImageLoading(false) }
+    reader.readAsDataURL(file)
+  }
+
+  const handleImageDrop = (e) => {
+    e.preventDefault()
+    const file = e.dataTransfer.files?.[0]
+    if (file) handleImageFile(file)
+  }
+
+  const handleImageChange = (e) => {
+    const file = e.target.files?.[0]
+    if (file) handleImageFile(file)
+  }
+
+  const clearImage = () => {
+    setImagePreview(null)
+    setForm(f => ({ ...f, image_url: '' }))
+    if (fileInputRef.current) fileInputRef.current.value = ''
+  }
 
   const setIngredient = (i, k, v) => setForm(f => {
     const ing = [...f.ingredients]; ing[i] = { ...ing[i], [k]: v }; return { ...f, ingredients: ing }
@@ -144,6 +182,43 @@ export default function ShareRecipePage() {
                 </select>
               </div>
             )}
+          </section>
+
+          {/* PHOTO UPLOAD */}
+          <section className={styles.section}>
+            <h2>📸 Recipe Photo <span style={{fontWeight:400,fontSize:'0.82rem',color:'var(--warm-gray)'}}>(optional)</span></h2>
+            {imagePreview ? (
+              <div className={styles.imagePreviewWrap}>
+                <img src={imagePreview} alt="Recipe preview" className={styles.imagePreview} />
+                <button type="button" className={styles.removeImageBtn} onClick={clearImage}>
+                  ✕ Remove photo
+                </button>
+              </div>
+            ) : (
+              <div
+                className={styles.dropZone}
+                onClick={() => fileInputRef.current?.click()}
+                onDragOver={e => e.preventDefault()}
+                onDrop={handleImageDrop}
+              >
+                {imageLoading ? (
+                  <span>Loading image…</span>
+                ) : (
+                  <>
+                    <span className={styles.dropZoneIcon}>📷</span>
+                    <span className={styles.dropZoneText}>Click to upload or drag & drop</span>
+                    <span className={styles.dropZoneHint}>JPG, PNG, WEBP — max 5 MB</span>
+                  </>
+                )}
+              </div>
+            )}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              style={{ display: 'none' }}
+              onChange={handleImageChange}
+            />
           </section>
 
           {/* INGREDIENTS */}
