@@ -88,28 +88,29 @@ function CommentNode({ comment, token, currentUser, recipeId, onReply, depth = 0
 
 export default function RecipeCommentsPage() {
   const { id } = useParams()
+  const { user } = useAuth()          // ← use AuthContext, not manual JWT decode
   const token = localStorage.getItem('token')
-  const currentUser = (() => {
-    try { return JSON.parse(atob(token?.split('.')[1] || '')) } catch { return null }
-  })()
 
   const [recipe,     setRecipe]     = useState(null)
   const [comments,   setComments]   = useState([])
   const [loading,    setLoading]    = useState(true)
   const [newComment, setNewComment] = useState('')
   const [posting,    setPosting]    = useState(false)
+  const [error,      setError]      = useState('')
 
   useEffect(() => {
     async function load() {
       setLoading(true)
+      setError('')
       try {
         const [rRes, cRes] = await Promise.all([
           fetch(`${API}/api/recipes/${id}`),
           fetch(`${API}/api/comments?recipe_id=${id}`),
         ])
         if (rRes.ok) setRecipe(await rRes.json())
+        else setError('Recipe not found.')
         if (cRes.ok) setComments(await cRes.json())
-      } catch {}
+      } catch { setError('Failed to load. Check your connection.') }
       finally { setLoading(false) }
     }
     load()
@@ -128,7 +129,7 @@ export default function RecipeCommentsPage() {
         const data = await res.json()
         setComments(cs => [...cs, {
           id: data.id, body: newComment.trim(), parent_id: null,
-          author: currentUser?.username || '?', replies: [],
+          author: user?.username || '?', replies: [],
           created_at: new Date().toISOString(),
         }])
         setNewComment('')
@@ -145,15 +146,16 @@ export default function RecipeCommentsPage() {
   const totalCount = comments.reduce((n, c) => n + 1 + (c.replies?.length || 0), 0)
 
   if (loading) return (
-    <div className={styles.page}><p className={styles.empty}>Loading…</p></div>
+    <div className={styles.page}><p className={styles.empty}>Loading comments…</p></div>
   )
-  if (!recipe) return (
-    <div className={styles.page}><p className={styles.empty}>Recipe not found. <Link to="/feed">← Feed</Link></p></div>
+  if (error || !recipe) return (
+    <div className={styles.page}>
+      <p className={styles.empty}>{error || 'Recipe not found.'} <Link to="/feed">← Feed</Link></p>
+    </div>
   )
 
   return (
     <div className={styles.page}>
-      {/* Recipe header card */}
       <div className={styles.recipeHeader}>
         <Link to="/feed" className={styles.backLink}>← Back to Feed</Link>
         <div className={styles.recipeCard}>
@@ -179,7 +181,6 @@ export default function RecipeCommentsPage() {
         </div>
       </div>
 
-      {/* Comments */}
       <div className={styles.commentsWrap}>
         <h2 className={styles.commentsHeading}>💬 {totalCount} Comment{totalCount !== 1 ? 's' : ''}</h2>
 
@@ -187,7 +188,7 @@ export default function RecipeCommentsPage() {
           ? <p className={styles.empty}>No comments yet — be the first!</p>
           : <div className={styles.commentList}>
               {comments.map(c => (
-                <CommentNode key={c.id} comment={c} token={token} currentUser={currentUser}
+                <CommentNode key={c.id} comment={c} token={token} currentUser={user}
                   recipeId={id} onReply={handleReply} depth={0} />
               ))}
             </div>
@@ -196,7 +197,7 @@ export default function RecipeCommentsPage() {
         {token ? (
           <div className={styles.newCommentBox}>
             <div className={styles.avatar} style={{ width: 36, height: 36, flexShrink: 0 }}>
-              {(currentUser?.username || '?').slice(0, 2).toUpperCase()}
+              {(user?.username || '?').slice(0, 2).toUpperCase()}
             </div>
             <div className={styles.newCommentRight}>
               <textarea

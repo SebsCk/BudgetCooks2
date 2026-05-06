@@ -16,7 +16,7 @@ const log = async (userId, role, action, entity, entityId, meta) => {
 router.get('/', async (req, res) => {
   try {
     const [rows] = await db.query(`
-      SELECT f.id, f.title, f.body, f.category, f.created_at, f.updated_at,
+      SELECT f.id, f.title, f.body, f.category, f.created_at, f.updated_at, f.edited_at,
              u.username AS author, u.role AS author_role,
              COUNT(fr.id) AS reply_count
       FROM forums f
@@ -39,7 +39,7 @@ router.get('/:id', async (req, res) => {
       WHERE f.id = ? AND f.deleted = 0`, [req.params.id]);
     if (!forums.length) return res.status(404).json({ error: 'Not found' });
     const [replies] = await db.query(`
-      SELECT fr.id, fr.body, fr.created_at, u.username AS author, u.role AS author_role
+      SELECT fr.id, fr.body, fr.created_at, fr.edited_at, u.username AS author, u.role AS author_role
       FROM forum_replies fr JOIN users u ON u.id = fr.user_id
       WHERE fr.forum_id = ? AND fr.deleted = 0
       ORDER BY fr.created_at ASC`, [req.params.id]);
@@ -72,6 +72,46 @@ router.post('/:id/replies', authenticate, async (req, res) => {
     );
     await log(req.user.id, req.user.role, 'replied_forum', 'forum', req.params.id, { body: body.slice(0,60) });
     res.status(201).json({ id: r.insertId, message: 'Reply added' });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// PATCH /api/forums/:id — edit post body
+router.patch('/:id', authenticate, async (req, res) => {
+  const { body } = req.body;
+  if (!body?.trim()) return res.status(400).json({ error: 'Body required' });
+  try {
+    const [rows] = await db.query('SELECT user_id FROM forums WHERE id = ? AND deleted = 0', [req.params.id]);
+    if (!rows.length) return res.status(404).json({ error: 'Not found' });
+    if (rows[0].user_id !== req.user.id && req.user.role !== 'admin')
+      return res.status(403).json({ error: 'Forbidden' });
+    await db.query('UPDATE forums SET body = ?, edited_at = NOW() WHERE id = ?', [body.trim(), req.params.id]);
+    res.json({ message: 'Post updated' });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// PATCH /api/forums/:id/replies/:replyId — edit reply body
+router.patch('/:id/replies/:replyId', authenticate, async (req, res) => {
+  const { body } = req.body;
+  if (!body?.trim()) return res.status(400).json({ error: 'Body required' });
+  try {
+    const [rows] = await db.query('SELECT user_id FROM forum_replies WHERE id = ? AND deleted = 0', [req.params.replyId]);
+    if (!rows.length) return res.status(404).json({ error: 'Not found' });
+    if (rows[0].user_id !== req.user.id && req.user.role !== 'admin')
+      return res.status(403).json({ error: 'Forbidden' });
+    await db.query('UPDATE forum_replies SET body = ?, edited_at = NOW() WHERE id = ?', [body.trim(), req.params.replyId]);
+    res.json({ message: 'Reply updated' });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// DELETE /api/forums/:id/replies/:replyId — soft-delete reply
+router.delete('/:id/replies/:replyId', authenticate, async (req, res) => {
+  try {
+    const [rows] = await db.query('SELECT user_id FROM forum_replies WHERE id = ?', [req.params.replyId]);
+    if (!rows.length) return res.status(404).json({ error: 'Not found' });
+    if (rows[0].user_id !== req.user.id && req.user.role !== 'admin')
+      return res.status(403).json({ error: 'Forbidden' });
+    await db.query('UPDATE forum_replies SET deleted = 1 WHERE id = ?', [req.params.replyId]);
+    res.json({ message: 'Reply deleted' });
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 

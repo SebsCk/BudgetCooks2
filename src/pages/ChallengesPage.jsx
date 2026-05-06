@@ -4,8 +4,12 @@ import styles from './ChallengesPage.module.css'
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:4000'
 
-function ChallengeCard({ ch, token, isAdmin, onRefresh }) {
-  const [busy, setBusy] = useState(false)
+function ChallengeCard({ ch, token, user, isAdmin, onRefresh }) {
+  const [busy,      setBusy]      = useState(false)
+  const [showPick,  setShowPick]  = useState(false)
+  const [recipes,   setRecipes]   = useState([])
+  const [loadingR,  setLoadingR]  = useState(false)
+  const [pickedId,  setPickedId]  = useState('')
 
   const changeStatus = async (status) => {
     setBusy(true)
@@ -22,56 +26,117 @@ function ChallengeCard({ ch, token, isAdmin, onRefresh }) {
     finally { setBusy(false) }
   }
 
-  const join = async () => {
+  const openPicker = async () => {
     if (!token) { alert('Please log in to join.'); return }
+    setShowPick(true)
+    setLoadingR(true)
+    try {
+      const res = await fetch(`${API}/api/recipes?mine=true`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      if (res.ok) {
+        const data = await res.json()
+        setRecipes(Array.isArray(data) ? data : (data.recipes || []))
+      }
+    } catch {}
+    setLoadingR(false)
+  }
+
+  const confirmJoin = async () => {
+    if (!pickedId) { alert('Please select a recipe.'); return }
     setBusy(true)
     try {
       const res = await fetch(`${API}/api/challenges/${ch.id}/enter`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ recipe_id: null }),
+        body: JSON.stringify({ recipe_id: parseInt(pickedId) }),
       })
       const data = await res.json()
       alert(data.message || data.error)
-    } catch (err) { alert('Network error') }
+      if (res.ok) { setShowPick(false); onRefresh() }
+    } catch { alert('Network error') }
     finally { setBusy(false) }
   }
 
   return (
-    <div className={`${styles.card} ${ch.status === 'active' ? styles.cardLive : ''}`}>
-      <div className={styles.cardIcon}>{ch.icon || '🏆'}</div>
-      <div className={styles.cardBody}>
-        <div className={styles.cardMeta}>
-          <span className={`${styles.badge} ${ch.status==='active'?styles.badgeLive:ch.status==='pending'?styles.badgeSoon:styles.badgeOpen}`}>
-            {ch.status==='active'?'🔥 Live':ch.status==='pending'?'⏳ Pending':ch.status==='closed'?'✅ Closed':'Open'}
-          </span>
-          {ch.budget_limit && <span className={styles.budget}>₱{ch.budget_limit} limit</span>}
-        </div>
-        <h3 className={styles.cardTitle}>{ch.title}</h3>
-        <p className={styles.cardDesc}>{ch.description || 'Share your best budget recipe!'}</p>
-        <div className={styles.cardFooter}>
-          <span className={styles.entries}>👥 {ch.entry_count || 0} entries</span>
-          <div style={{display:'flex',gap:'0.5rem',flexWrap:'wrap'}}>
-            {ch.status==='active' && !isAdmin && (
-              <button className="btn btn-primary" style={{fontSize:'0.82rem',padding:'0.5rem 1rem'}}
-                onClick={join} disabled={busy}>{busy?'…':'Join Challenge →'}</button>
-            )}
-            {isAdmin && ch.status==='pending' && (
-              <>
-                <button className="btn btn-primary" style={{fontSize:'0.8rem',padding:'0.4rem 0.8rem'}}
-                  onClick={()=>changeStatus('active')} disabled={busy}>✅ Approve</button>
-                <button className="btn btn-outline" style={{fontSize:'0.8rem',padding:'0.4rem 0.8rem',color:'var(--terra)',borderColor:'var(--terra)'}}
-                  onClick={()=>changeStatus('rejected')} disabled={busy}>❌ Reject</button>
-              </>
-            )}
-            {isAdmin && ch.status==='active' && (
-              <button className="btn btn-outline" style={{fontSize:'0.8rem',padding:'0.4rem 0.8rem'}}
-                onClick={()=>changeStatus('closed')} disabled={busy}>Close</button>
-            )}
+    <>
+      <div className={`${styles.card} ${ch.status === 'active' ? styles.cardLive : ''}`}>
+        <div className={styles.cardIcon}>{ch.icon || '🏆'}</div>
+        <div className={styles.cardBody}>
+          <div className={styles.cardMeta}>
+            <span className={`${styles.badge} ${ch.status==='active'?styles.badgeLive:ch.status==='pending'?styles.badgeSoon:styles.badgeOpen}`}>
+              {ch.status==='active'?'🔥 Live':ch.status==='pending'?'⏳ Pending':ch.status==='closed'?'✅ Closed':'Open'}
+            </span>
+            {ch.budget_limit && <span className={styles.budget}>₱{ch.budget_limit} limit</span>}
+          </div>
+          <h3 className={styles.cardTitle}>{ch.title}</h3>
+          <p className={styles.cardDesc}>{ch.description || 'Share your best budget recipe!'}</p>
+          <div className={styles.cardFooter}>
+            <span className={styles.entries}>👥 {ch.entry_count || 0} entries</span>
+            <div style={{display:'flex',gap:'0.5rem',flexWrap:'wrap'}}>
+              {ch.status==='active' && !isAdmin && (
+                <button className="btn btn-primary" style={{fontSize:'0.82rem',padding:'0.5rem 1rem'}}
+                  onClick={openPicker} disabled={busy}>{busy?'…':'Join Challenge →'}</button>
+              )}
+              {isAdmin && ch.status==='pending' && (
+                <>
+                  <button className="btn btn-primary" style={{fontSize:'0.8rem',padding:'0.4rem 0.8rem'}}
+                    onClick={()=>changeStatus('active')} disabled={busy}>✅ Approve</button>
+                  <button className="btn btn-outline" style={{fontSize:'0.8rem',padding:'0.4rem 0.8rem',color:'var(--terra)',borderColor:'var(--terra)'}}
+                    onClick={()=>changeStatus('rejected')} disabled={busy}>❌ Reject</button>
+                </>
+              )}
+              {isAdmin && ch.status==='active' && (
+                <button className="btn btn-outline" style={{fontSize:'0.8rem',padding:'0.4rem 0.8rem'}}
+                  onClick={()=>changeStatus('closed')} disabled={busy}>Close</button>
+              )}
+            </div>
           </div>
         </div>
       </div>
-    </div>
+
+      {/* Recipe picker modal */}
+      {showPick && (
+        <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.5)',display:'flex',alignItems:'center',justifyContent:'center',zIndex:1000,padding:'1rem'}}
+          onClick={() => setShowPick(false)}>
+          <div style={{background:'#fff',borderRadius:'14px',padding:'2rem',width:'100%',maxWidth:'480px',maxHeight:'80vh',overflowY:'auto'}}
+            onClick={e => e.stopPropagation()}>
+            <h3 style={{marginBottom:'0.5rem',fontSize:'1.1rem'}}>🏆 Join: {ch.title}</h3>
+            <p style={{fontSize:'0.85rem',color:'#666',marginBottom:'1.25rem'}}>Select one of your recipes to submit.</p>
+            {loadingR ? (
+              <p style={{color:'#999',fontSize:'0.9rem'}}>Loading your recipes…</p>
+            ) : recipes.length === 0 ? (
+              <p style={{color:'#999',fontSize:'0.9rem'}}>You haven't posted any recipes yet. <a href="/share" style={{color:'var(--terra)'}}>Share one first!</a></p>
+            ) : (
+              <div style={{display:'flex',flexDirection:'column',gap:'0.5rem',marginBottom:'1.25rem'}}>
+                {recipes.map(r => (
+                  <label key={r.id} style={{display:'flex',alignItems:'center',gap:'0.75rem',padding:'0.65rem 0.85rem',border:`2px solid ${pickedId==r.id?'var(--terra)':'#e2e8f0'}`,borderRadius:'9px',cursor:'pointer',background:pickedId==r.id?'#fff5f0':'#fff'}}>
+                    <input type="radio" name="recipeId" value={r.id}
+                      checked={pickedId == r.id}
+                      onChange={() => setPickedId(r.id)}
+                      style={{accentColor:'var(--terra)'}} />
+                    <div>
+                      <div style={{fontWeight:600,fontSize:'0.9rem'}}>{r.title}</div>
+                      <div style={{fontSize:'0.78rem',color:'#888'}}>₱{r.estimated_cost || '—'} · {r.servings || 1} servings</div>
+                    </div>
+                  </label>
+                ))}
+              </div>
+            )}
+            <div style={{display:'flex',gap:'0.5rem',justifyContent:'flex-end'}}>
+              <button onClick={() => setShowPick(false)}
+                style={{padding:'0.5rem 1rem',border:'1.5px solid #ddd',borderRadius:'8px',background:'none',cursor:'pointer'}}>
+                Cancel
+              </button>
+              <button onClick={confirmJoin} disabled={busy || !pickedId || loadingR}
+                style={{padding:'0.5rem 1.25rem',background:'var(--terra)',color:'#fff',border:'none',borderRadius:'8px',fontWeight:600,cursor:'pointer',opacity:(!pickedId||busy)?0.5:1}}>
+                {busy ? 'Submitting…' : '🏆 Submit Entry'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   )
 }
 
@@ -172,7 +237,7 @@ export default function ChallengesPage() {
                 <section className={styles.section}>
                   <h2 className={styles.sectionTitle}>🔥 Live Now</h2>
                   <div className={styles.grid}>
-                    {active.map(ch => <ChallengeCard key={ch.id} ch={ch} token={token} isAdmin={isAdmin} onRefresh={fetchAll} />)}
+                    {active.map(ch => <ChallengeCard key={ch.id} ch={ch} token={token} user={user} isAdmin={isAdmin} onRefresh={fetchAll} />)}
                   </div>
                 </section>
               )}
@@ -180,7 +245,7 @@ export default function ChallengesPage() {
                 <section className={styles.section}>
                   <h2 className={styles.sectionTitle}>⏳ Pending Approval</h2>
                   <div className={styles.grid}>
-                    {pending.map(ch => <ChallengeCard key={ch.id} ch={ch} token={token} isAdmin={isAdmin} onRefresh={fetchAll} />)}
+                    {pending.map(ch => <ChallengeCard key={ch.id} ch={ch} token={token} user={user} isAdmin={isAdmin} onRefresh={fetchAll} />)}
                   </div>
                 </section>
               )}
@@ -188,7 +253,7 @@ export default function ChallengesPage() {
                 <section className={styles.section}>
                   <h2 className={styles.sectionTitle}>✅ Closed</h2>
                   <div className={styles.grid}>
-                    {closed.map(ch => <ChallengeCard key={ch.id} ch={ch} token={token} isAdmin={isAdmin} onRefresh={fetchAll} />)}
+                    {closed.map(ch => <ChallengeCard key={ch.id} ch={ch} token={token} user={user} isAdmin={isAdmin} onRefresh={fetchAll} />)}
                   </div>
                 </section>
               )}

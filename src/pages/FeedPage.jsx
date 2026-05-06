@@ -17,7 +17,9 @@ function EditRecipeModal({ recipe, token, onClose, onSaved }) {
     prep_time_mins: recipe.prep_time_mins || 0,
     cook_time_mins: recipe.cook_time_mins || 0,
     category:       recipe.category || '',
+    image_url:      recipe.image_url || '',
   })
+  const [imagePreview, setImagePreview] = useState(recipe.image_url || null)
   const [loading, setLoading] = useState(false)
   const [error,   setError]   = useState('')
 
@@ -98,6 +100,42 @@ function EditRecipeModal({ recipe, token, onClose, onSaved }) {
               <input type="number" min="0" value={form.cook_time_mins} onChange={e=>sf('cook_time_mins',e.target.value)}
                 style={{padding:'0.55rem 0.8rem',border:'1.5px solid #e2e8f0',borderRadius:'7px',fontSize:'0.9rem'}} />
             </div>
+          </div>
+          <div style={{display:'flex',flexDirection:'column',gap:'0.25rem'}}>
+            <label style={{fontSize:'0.82rem',fontWeight:600}}>📸 Recipe Photo</label>
+            {imagePreview ? (
+              <div style={{display:'flex',flexDirection:'column',gap:'0.4rem'}}>
+                <img src={imagePreview} alt="preview" style={{width:'100%',maxHeight:180,objectFit:'cover',borderRadius:'8px',border:'1.5px solid #e2e8f0'}} />
+                <button type="button"
+                  style={{alignSelf:'flex-start',background:'none',border:'1.5px solid #ddd',color:'#888',borderRadius:'6px',padding:'0.25rem 0.7rem',fontSize:'0.8rem',cursor:'pointer'}}
+                  onClick={() => { setImagePreview(null); sf('image_url','') }}>
+                  ✕ Remove photo
+                </button>
+              </div>
+            ) : (
+              <label style={{border:'2px dashed #e2e8f0',borderRadius:'8px',padding:'1.25rem',textAlign:'center',cursor:'pointer',display:'block',color:'#aaa',fontSize:'0.85rem'}}
+                onDragOver={e => e.preventDefault()}
+                onDrop={e => {
+                  e.preventDefault()
+                  const file = e.dataTransfer.files?.[0]
+                  if (!file || !file.type.startsWith('image/')) return
+                  if (file.size > 5*1024*1024) { alert('Image must be under 5 MB'); return }
+                  const reader = new FileReader()
+                  reader.onload = ev => { setImagePreview(ev.target.result); sf('image_url', ev.target.result) }
+                  reader.readAsDataURL(file)
+                }}>
+                📷 Click or drag & drop to upload (max 5 MB)
+                <input type="file" accept="image/*" style={{display:'none'}}
+                  onChange={e => {
+                    const file = e.target.files?.[0]
+                    if (!file) return
+                    if (file.size > 5*1024*1024) { alert('Image must be under 5 MB'); return }
+                    const reader = new FileReader()
+                    reader.onload = ev => { setImagePreview(ev.target.result); sf('image_url', ev.target.result) }
+                    reader.readAsDataURL(file)
+                  }} />
+              </label>
+            )}
           </div>
           <div style={{display:'flex',gap:'0.75rem',justifyContent:'flex-end',marginTop:'0.5rem'}}>
             <button type="button" onClick={onClose}

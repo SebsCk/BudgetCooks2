@@ -31,3 +31,41 @@
 .form input:focus, .form textarea:focus { outline: none; border-color: var(--terra); }
 .modalActions { display: flex; gap: 0.75rem; justify-content: flex-end; margin-top: 0.5rem; }
 .error { color: var(--terra); font-size: 0.85rem; padding: 0.5rem; background: #fef2f2; border-radius: 6px; }
+
+/* ── Post modal extras ── */
+.postHeader    { display:flex; gap:0.5rem; align-items:center; flex-wrap:wrap; margin-bottom:0.5rem; }
+.modalTitle    { font-size:1.25rem; font-weight:700; color:var(--charcoal); margin:0 0 0.75rem; }
+.postBodyFull  { font-size:0.92rem; color:var(--charcoal); line-height:1.65; white-space:pre-wrap; margin:0 0 0.75rem; }
+.postMeta      { display:flex; gap:0.75rem; align-items:center; flex-wrap:wrap; font-size:0.82rem; color:var(--warm-gray); }
+.editedTag     { font-size:0.75rem; color:var(--warm-gray); background:var(--cream); border:1px solid var(--cream2); padding:0.1rem 0.45rem; border-radius:10px; }
+.metaBtn       { background:none; border:none; cursor:pointer; font-size:0.8rem; color:var(--olive); padding:0; font-weight:600; }
+.metaBtn:hover { text-decoration:underline; }
+
+.repliesHeading { font-size:0.95rem; font-weight:700; color:var(--charcoal); margin:0 0 0.75rem; }
+.replyList      { display:flex; flex-direction:column; gap:0; }
+.emptyReplies   { font-size:0.85rem; color:var(--warm-gray); padding:0.5rem 0; }
+
+.replyItem    { display:flex; gap:0.6rem; padding:0.75rem 0; border-bottom:1px solid var(--cream2); }
+.replyItem:last-child { border-bottom:none; }
+.replyAvatar  { width:30px; height:30px; border-radius:50%; background:var(--olive); color:#fff; font-size:0.7rem; font-weight:700; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.replyContent { flex:1; }
+.replyMeta    { display:flex; align-items:center; gap:0.4rem; margin-bottom:0.2rem; flex-wrap:wrap; }
+.replyMeta strong { font-size:0.83rem; }
+.time         { font-size:0.75rem; color:var(--warm-gray); }
+.replyBody    { font-size:0.88rem; color:var(--charcoal); line-height:1.5; margin:0; }
+.replyActions { display:flex; gap:0.5rem; margin-top:0.3rem; }
+
+.editBox      { display:flex; flex-direction:column; gap:0.4rem; margin:0.4rem 0; }
+.editInput    { padding:0.5rem 0.75rem; border:1.5px solid var(--cream2); border-radius:8px; font-size:0.88rem; font-family:inherit; resize:vertical; outline:none; }
+.editInput:focus { border-color:var(--terra); }
+.editActions  { display:flex; gap:0.4rem; justify-content:flex-end; }
+.saveBtn      { background:var(--terra); color:#fff; border:none; border-radius:8px; padding:0.35rem 0.9rem; font-size:0.82rem; font-weight:600; cursor:pointer; }
+.saveBtn:disabled { opacity:0.5; cursor:default; }
+.cancelBtn    { background:none; border:1.5px solid var(--cream2); color:var(--warm-gray); border-radius:8px; padding:0.35rem 0.9rem; font-size:0.82rem; cursor:pointer; }
+
+.replyInputWrap { display:flex; gap:0.6rem; align-items:flex-start; margin-top:1.25rem; padding-top:1rem; border-top:1px solid var(--cream2); }
+.replyTextarea  { width:100%; padding:0.55rem 0.8rem; border:1.5px solid var(--cream2); border-radius:8px; font-size:0.88rem; font-family:inherit; resize:vertical; outline:none; box-sizing:border-box; }
+.replyTextarea:focus { border-color:var(--terra); }
+
+.closeBtn { display:block; width:100%; margin-top:1.25rem; padding:0.6rem; background:var(--cream); border:none; border-radius:8px; font-size:0.85rem; color:var(--warm-gray); cursor:pointer; font-weight:600; }
+.closeBtn:hover { background:var(--cream2); }
