@@ -1,0 +1,228 @@
+.page { min-height: 100vh; background: var(--cream); }
+
+/* ── Recipe header ── */
+.recipeHeader {
+  background: var(--olive);
+  padding: 1.5rem 1.25rem 2rem;
+}
+.backLink {
+  display: inline-block;
+  color: var(--cream2);
+  font-size: 0.85rem;
+  text-decoration: none;
+  margin-bottom: 1rem;
+  opacity: 0.85;
+}
+.backLink:hover { opacity: 1; text-decoration: underline; }
+
+.recipeCard {
+  max-width: 760px;
+  margin: 0 auto;
+  background: rgba(255,255,255,0.08);
+  border-radius: 12px;
+  padding: 1.25rem;
+  display: flex;
+  gap: 1.25rem;
+  align-items: flex-start;
+}
+.recipeImg {
+  width: 110px;
+  height: 90px;
+  object-fit: cover;
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+.recipePlaceholder {
+  width: 110px;
+  height: 90px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.5rem;
+  flex-shrink: 0;
+}
+.recipeInfo { flex: 1; }
+.tag {
+  display: inline-block;
+  background: rgba(255,255,255,0.15);
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 0.2rem 0.6rem;
+  border-radius: 20px;
+  margin-bottom: 0.4rem;
+}
+.recipeTitle {
+  font-size: 1.4rem;
+  color: #fff;
+  margin: 0 0 0.4rem;
+  line-height: 1.25;
+}
+.recipeMeta {
+  display: flex;
+  gap: 0.6rem;
+  font-size: 0.83rem;
+  color: var(--cream2);
+  opacity: 0.9;
+  flex-wrap: wrap;
+  margin-bottom: 0.6rem;
+}
+.recipeAuthor {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  color: #fff;
+}
+.authorAvatar {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  background: var(--terra);
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ── Comments ── */
+.commentsWrap {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 2rem 1.25rem 4rem;
+}
+.commentsHeading {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--charcoal);
+  margin-bottom: 1.5rem;
+  border-bottom: 2px solid var(--cream2);
+  padding-bottom: 0.6rem;
+}
+.empty { color: var(--warm-gray); font-size: 0.9rem; }
+
+.commentList { display: flex; flex-direction: column; gap: 0; }
+
+/* ── Comment node ── */
+.commentNode {
+  display: flex;
+  gap: 0.75rem;
+  padding: 1rem 0;
+  border-bottom: 1px solid var(--cream2);
+}
+.commentNode:last-child { border-bottom: none; }
+.nested {
+  margin-top: 0.75rem;
+  margin-left: 0.5rem;
+  padding-left: 1rem;
+  border-left: 2px solid var(--cream2);
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.avatar {
+  border-radius: 50%;
+  background: var(--olive);
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.commentContent { flex: 1; }
+.commentHeader  { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem; }
+.commentHeader strong { font-size: 0.88rem; color: var(--charcoal); }
+.time { font-size: 0.75rem; color: var(--warm-gray); }
+.commentBody { font-size: 0.9rem; color: var(--charcoal); margin: 0 0 0.35rem; line-height: 1.5; }
+
+.replyBtn {
+  background: none; border: none;
+  color: var(--terra);
+  font-size: 0.78rem;
+  cursor: pointer;
+  padding: 0;
+  font-weight: 600;
+}
+.replyBtn:hover { text-decoration: underline; }
+
+.replyRow {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.5rem;
+}
+.replyInput {
+  flex: 1;
+  padding: 0.4rem 0.8rem;
+  border: 1.5px solid var(--cream2);
+  border-radius: 20px;
+  font-size: 0.83rem;
+  outline: none;
+}
+.replyInput:focus { border-color: var(--terra); }
+
+/* ── New comment ── */
+.newCommentBox {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 2px solid var(--cream2);
+  align-items: flex-start;
+}
+.newCommentRight { flex: 1; display: flex; flex-direction: column; gap: 0.5rem; }
+.newCommentInput {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 1.5px solid var(--cream2);
+  border-radius: 10px;
+  font-size: 0.9rem;
+  font-family: inherit;
+  resize: vertical;
+  outline: none;
+  box-sizing: border-box;
+}
+.newCommentInput:focus { border-color: var(--terra); }
+.newCommentFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.hint { font-size: 0.75rem; color: var(--warm-gray); }
+
+.postBtn {
+  background: var(--terra);
+  color: #fff;
+  border: none;
+  border-radius: 20px;
+  padding: 0.45rem 1.1rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.postBtn:disabled { opacity: 0.5; cursor: default; }
+.postBtn:not(:disabled):hover { background: var(--charcoal); }
+
+.loginBox {
+  margin-top: 2rem;
+  padding: 1.25rem;
+  background: var(--white);
+  border-radius: 10px;
+  text-align: center;
+  font-size: 0.9rem;
+  color: var(--warm-gray);
+  border: 1.5px dashed var(--cream2);
+}
+.loginLink { color: var(--terra); font-weight: 600; text-decoration: underline; }
+
+@media (max-width: 600px) {
+  .recipeCard { flex-direction: column; }
+  .recipeImg, .recipePlaceholder { width: 100%; height: 140px; }
+}

@@ -117,7 +117,11 @@ function EditRecipeModal({ recipe, token, onClose, onSaved }) {
 
 const TABS = ['🔥 Hot','✨ New','👑 Top','🏆 Challenges']
 
+<<<<<<< HEAD
 function CommentThread({ comment, token, onReply, currentUser }) {
+=======
+function CommentThread({ comment, token, onReply, currentUser, recipeId, depth = 0 }) {
+>>>>>>> b5b503a (Comments fix)
   const [showReply, setShowReply] = useState(false)
   const [replyText, setReplyText] = useState('')
   const [submitting, setSubmitting] = useState(false)
@@ -129,11 +133,21 @@ function CommentThread({ comment, token, onReply, currentUser }) {
       const res = await fetch(`${API}/api/comments`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+<<<<<<< HEAD
         body: JSON.stringify({ recipe_id: comment.recipe_id || comment.id, body: replyText.trim(), parent_id: comment.id }),
       })
       if (res.ok) {
         const data = await res.json()
         onReply({ id: data.id, body: replyText.trim(), parent_id: comment.id, author: currentUser?.username || '?', replies: [], created_at: new Date().toISOString() })
+=======
+        body: JSON.stringify({ recipe_id: recipeId, body: replyText.trim(), parent_id: comment.id }),
+      })
+      if (res.ok) {
+        const data = await res.json()
+        // backend may redirect deep replies to grandparent
+        const effectiveParentId = data.parent_id ?? comment.id
+        onReply({ id: data.id, body: replyText.trim(), parent_id: effectiveParentId, author: currentUser?.username || '?', replies: [], created_at: new Date().toISOString() })
+>>>>>>> b5b503a (Comments fix)
         setReplyText('')
         setShowReply(false)
       }
@@ -149,17 +163,28 @@ function CommentThread({ comment, token, onReply, currentUser }) {
           <span className={styles.commentTime}>{new Date(comment.created_at).toLocaleDateString()}</span>
         </div>
         <p className={styles.commentText}>{comment.body}</p>
+<<<<<<< HEAD
         {token && !comment.parent_id && (
+=======
+        {token && (
+>>>>>>> b5b503a (Comments fix)
           <button className={styles.replyBtn} onClick={() => setShowReply(v => !v)}>
             {showReply ? 'Cancel' : '↩ Reply'}
           </button>
         )}
         {showReply && (
           <div className={styles.replyBox}>
+<<<<<<< HEAD
             <input placeholder="Write a reply…" value={replyText}
               onChange={e => setReplyText(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && !e.shiftKey && submitReply()}
               className={styles.replyInput} />
+=======
+            <input placeholder={`Reply to ${comment.author}…`} value={replyText}
+              onChange={e => setReplyText(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && !e.shiftKey && submitReply()}
+              className={styles.replyInput} autoFocus />
+>>>>>>> b5b503a (Comments fix)
             <button className={styles.replySubmit} onClick={submitReply} disabled={submitting || !replyText.trim()}>
               {submitting ? '…' : 'Post'}
             </button>
@@ -167,6 +192,7 @@ function CommentThread({ comment, token, onReply, currentUser }) {
         )}
         {comment.replies?.map(r => (
           <div key={r.id} className={styles.nestedComment}>
+<<<<<<< HEAD
             <div className={styles.commentAvatar} style={{width:26,height:26,fontSize:'0.68rem'}}>{(r.author||'?').slice(0,2).toUpperCase()}</div>
             <div className={styles.commentBody}>
               <div className={styles.commentMeta}>
@@ -175,6 +201,16 @@ function CommentThread({ comment, token, onReply, currentUser }) {
               </div>
               <p className={styles.commentText}>{r.body}</p>
             </div>
+=======
+            <CommentThread
+              comment={r}
+              token={token}
+              onReply={onReply}
+              currentUser={currentUser}
+              recipeId={recipeId}
+              depth={depth + 1}
+            />
+>>>>>>> b5b503a (Comments fix)
           </div>
         ))}
       </div>
@@ -288,9 +324,20 @@ function RecipeCard({ recipe, liked, onLike, currentUser, onDelete, onEdit }) {
             {comments.length === 0 && commentsLoaded && (
               <p className={styles.noComments}>No comments yet. Be the first!</p>
             )}
+<<<<<<< HEAD
             {comments.map(c => (
               <CommentThread key={c.id} comment={{...c, recipe_id: recipe.id}} token={token} onReply={handleReply} currentUser={currentUser} />
             ))}
+=======
+            {(commentCount >= 3 ? comments.slice(0, 2) : comments).map(c => (
+              <CommentThread key={c.id} comment={c} token={token} onReply={handleReply} currentUser={currentUser} recipeId={recipe.id} />
+            ))}
+            {commentCount >= 3 && (
+              <a href={`/recipe/${recipe.id}/comments`} className={styles.viewAllLink}>
+                💬 View all {commentCount} comments →
+              </a>
+            )}
+>>>>>>> b5b503a (Comments fix)
             {token ? (
               <div className={styles.commentInputRow}>
                 <div className={styles.commentAvatar} style={{flexShrink:0}}>{(currentUser?.username||'?').slice(0,2).toUpperCase()}</div>
