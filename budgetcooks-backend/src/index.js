@@ -14,16 +14,27 @@ const activityRoutes  = require('./routes/activity');
 const app  = express();
 const PORT = process.env.PORT || 4000;
 
-app.use(cors({
-  origin: [
-    'http://localhost:5173',
-    'https://budget-cooks2.vercel.app',
-  ],
+const corsOptions = {
+  origin: (origin, callback) => {
+    const allowed = [
+      'http://localhost:5173',
+      'http://localhost:4173',
+      'https://budget-cooks2.vercel.app',
+    ]
+    // Allow all Vercel preview deployments for this project
+    if (!origin || allowed.includes(origin) || /https:\/\/budget-cooks2.*\.vercel\.app$/.test(origin)) {
+      callback(null, true)
+    } else {
+      callback(new Error('Not allowed by CORS'))
+    }
+  },
   credentials: true,
   methods: ['GET','POST','PUT','PATCH','DELETE','OPTIONS'],
   allowedHeaders: ['Content-Type','Authorization'],
-}));
-app.options('*', cors());
+}
+
+app.use(cors(corsOptions))
+app.options('*', cors(corsOptions))
 app.use(express.json());
 
 app.use('/auth',           authRoutes);
