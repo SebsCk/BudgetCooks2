@@ -303,7 +303,7 @@ function RecipeCard({ recipe, liked, onLike, currentUser, onDelete, onEdit }) {
           <div className={styles.cost}>₱{recipe.estimated_cost || '—'} <span>/ batch</span></div>
           <div className={styles.actions}>
             <button className={`${styles.actionBtn} ${liked ? styles.liked : ''}`} onClick={() => onLike(recipe.id)}>
-              {liked ? '❤️' : '🤍'} {(parseInt(recipe.like_count) || 0) + (liked ? 1 : 0)}
+              {liked ? '❤️' : '🤍'} {parseInt(recipe.like_count) || 0}
             </button>
             <button className={`${styles.actionBtn} ${showComments ? styles.commentActive : ''}`} onClick={toggleComments}>
               💬 {commentCount}
@@ -383,9 +383,18 @@ export default function FeedPage() {
 
   useEffect(() => {
     setLoading(true)
-    fetch(`${API}/api/recipes`)
+    const token = localStorage.getItem('token')
+    const headers = token ? { Authorization: `Bearer ${token}` } : {}
+    fetch(`${API}/api/recipes`, { headers })
       .then(r => r.ok ? r.json() : [])
-      .then(data => setRecipes(Array.isArray(data) ? data : []))
+      .then(data => {
+        if (!Array.isArray(data)) return
+        setRecipes(data)
+        // seed liked state from server so it survives reloads
+        const initialLikes = {}
+        data.forEach(r => { if (r.user_liked) initialLikes[r.id] = true })
+        setLikes(initialLikes)
+      })
       .catch(() => setRecipes([]))
       .finally(() => setLoading(false))
   }, [])
@@ -483,17 +492,22 @@ export default function FeedPage() {
                 onLike={async (id) => {
                   const token = localStorage.getItem('token')
                   if (!token) { navigate('/login'); return }
-                  // optimistic toggle
-                  setLikes(p => ({...p,[id]:!p[id]}))
                   try {
-                    await fetch(`${API}/api/recipes/${id}/like`, {
+                    const res = await fetch(`${API}/api/recipes/${id}/like`, {
                       method: 'POST',
                       headers: { Authorization: `Bearer ${token}` }
                     })
-                  } catch {
-                    // revert on failure
-                    setLikes(p => ({...p,[id]:!p[id]}))
-                  }
+                    if (res.ok) {
+                      const { liked } = await res.json()
+                      setLikes(p => ({ ...p, [id]: liked }))
+                      // update the authoritative count in recipes array
+                      setRecipes(rs => rs.map(r =>
+                        r.id === id
+                          ? { ...r, like_count: (parseInt(r.like_count) || 0) + (liked ? 1 : -1) }
+                          : r
+                      ))
+                    }
+                  } catch (err) { console.error(err) }
                 }}
                 currentUser={currentUser}
                 onDelete={handleDeleteRecipe}

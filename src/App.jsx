@@ -13,6 +13,7 @@ import CategoriesPage      from './pages/CategoriesPage'
 import AboutPage           from './pages/AboutPage'
 import ForumPage from './pages/ForumPage'
 import ShareRecipePage     from './pages/ShareRecipePage'
+import RecipeCommentsPage  from './pages/RecipeCommentsPage'
 import './index.css'
 
 export default function App() {
@@ -33,6 +34,7 @@ export default function App() {
           <Route path="/admin"         element={<AdminDashboard />}  />
           <Route path="/shopping-list" element={<ShoppingList />}    />
           <Route path="/meal-planner"  element={<MealPlanner />}     />
+          <Route path="/recipe/:id/comments" element={<RecipeCommentsPage />} />
         </Routes>
       </BrowserRouter>
     </AuthProvider>

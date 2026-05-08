@@ -8,6 +8,17 @@ const router = express.Router();
 router.get('/', async (req, res) => {
   const { sort = 'hot', category, q, limit = 10, offset = 0 } = req.query;
 
+  // optionally decode user from Authorization header (no hard auth required)
+  let userId = null;
+  try {
+    const authHeader = req.headers.authorization || '';
+    if (authHeader.startsWith('Bearer ')) {
+      const jwt = require('jsonwebtoken');
+      const payload = jwt.verify(authHeader.slice(7), process.env.JWT_SECRET);
+      userId = payload.id || payload.userId || null;
+    }
+  } catch {}
+
   const orderMap = {
     hot:       'r.created_at DESC',
     new:       'r.created_at DESC',
@@ -21,6 +32,14 @@ router.get('/', async (req, res) => {
   if (category) { where += ' AND c.slug = ?'; params.push(category); }
   if (q)        { where += ' AND r.title LIKE ?'; params.push(`%${q}%`); }
 
+  const userLikedCol = userId
+    ? `MAX(CASE WHEN ul.user_id = ${parseInt(userId)} THEN 1 ELSE 0 END) AS user_liked,`
+    : `0 AS user_liked,`;
+
+  const userLikedJoin = userId
+    ? `LEFT JOIN likes ul ON ul.recipe_id = r.id AND ul.user_id = ${parseInt(userId)}`
+    : '';
+
   const sql = `
     SELECT r.id, r.title, r.description, r.estimated_cost,
            r.prep_time_mins, r.cook_time_mins, r.servings,
@@ -29,12 +48,15 @@ router.get('/', async (req, res) => {
            CASE WHEN r.anonymous = 1 THEN NULL ELSE u.avatar_url END AS author_avatar,
            c.name AS category,
            COUNT(DISTINCT l.id) AS like_count,
-           COUNT(DISTINCT cm.id) AS comment_count
+           COUNT(DISTINCT cm.id) AS comment_count,
+           ${userLikedCol}
+           r.challenge_id
     FROM recipes r
     LEFT JOIN users u    ON u.id = r.user_id
     LEFT JOIN categories c ON c.id = r.category_id
     LEFT JOIN likes l    ON l.recipe_id = r.id
     LEFT JOIN comments cm ON cm.recipe_id = r.id
+    ${userLikedJoin}
     ${where}
     GROUP BY r.id
     ORDER BY ${order}
