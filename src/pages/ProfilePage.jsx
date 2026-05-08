@@ -30,30 +30,6 @@ function RecipeMini({ recipe }) {
         </p>
       </div>
     </Link>
-      {/* Delete Account Modal */}
-      {showDeleteConfirm && (
-        <div className={styles.modalOverlay} onClick={() => setShowDeleteConfirm(false)}>
-          <div className={styles.modal} onClick={e => e.stopPropagation()}>
-            <div className={styles.modalIcon}>⚠️</div>
-            <h3>Delete Your Account?</h3>
-            <p>Your account will be permanently deleted. Your recipes and forum posts will remain but show as <strong>Deleted User</strong> — only admins can remove them.</p>
-            <p style={{fontSize:'0.85rem',color:'#888',marginTop:'0.5rem'}}>Tip: delete your posts first if you want them removed.</p>
-            {deleteError && <p className={styles.deleteError}>{deleteError}</p>}
-            <input
-              type="password" placeholder="Enter your password to confirm"
-              value={deletePassword} onChange={e => setDeletePassword(e.target.value)}
-              className={styles.deleteInput}
-            />
-            <div className={styles.modalActions}>
-              <button className={styles.modalCancel} onClick={() => { setShowDeleteConfirm(false); setDeletePassword(''); setDeleteError('') }}>Cancel</button>
-              <button className={styles.modalConfirm} onClick={handleDeleteAccount} disabled={deleting}>
-                {deleting ? 'Deleting…' : 'Delete My Account'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
   )
 }
 
@@ -63,17 +39,17 @@ export default function ProfilePage() {
   const navigate = useNavigate()
   const token = localStorage.getItem('token')
 
-  const [profile,  setProfile]  = useState(null)
-  const [tab,      setTab]      = useState('recipes')
-  const [loading,  setLoading]  = useState(true)
-  const [error,    setError]    = useState('')
+  const [profile,   setProfile]   = useState(null)
+  const [tab,       setTab]       = useState('recipes')
+  const [loading,   setLoading]   = useState(true)
+  const [error,     setError]     = useState('')
   const [bookmarks, setBookmarks] = useState([])
 
   const isMe = user?.username === username
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
-  const [deletePassword, setDeletePassword] = useState('')
-  const [deleteError, setDeleteError] = useState('')
-  const [deleting, setDeleting] = useState(false)
+  const [deletePassword,    setDeletePassword]    = useState('')
+  const [deleteError,       setDeleteError]       = useState('')
+  const [deleting,          setDeleting]          = useState(false)
 
   useEffect(() => {
     setLoading(true)
@@ -119,7 +95,7 @@ export default function ProfilePage() {
     if (!deletePassword) { setDeleteError('Please enter your password to confirm.'); return }
     setDeleting(true); setDeleteError('')
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:4000'}/auth/me`, {
+      const res = await fetch(`${API}/auth/me`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({ password: deletePassword })
@@ -166,19 +142,18 @@ export default function ProfilePage() {
         ))}
       </div>
 
+      {/* Tab content */}
       <div className={styles.content}>
         {tab === 'recipes' && (
           profile.recipes?.length === 0
             ? <p className={styles.empty}>No recipes shared yet.</p>
             : <div className={styles.grid}>{profile.recipes.map(r => <RecipeMini key={r.id} recipe={r} />)}</div>
         )}
-
         {tab === 'liked' && (
           profile.liked?.length === 0
             ? <p className={styles.empty}>No liked recipes yet.</p>
             : <div className={styles.grid}>{profile.liked.map(r => <RecipeMini key={r.id} recipe={{...r, like_count: undefined}} />)}</div>
         )}
-
         {tab === 'challenges' && (
           profile.challenges?.length === 0
             ? <p className={styles.empty}>No challenge entries yet.</p>
@@ -194,14 +169,13 @@ export default function ProfilePage() {
                 ))}
               </div>
         )}
-
         {tab === 'saved' && isMe && (
           bookmarks.length === 0
             ? <p className={styles.empty}>No saved recipes yet.</p>
             : <div className={styles.grid}>{bookmarks.map(r => <RecipeMini key={r.id} recipe={r} />)}</div>
         )}
       </div>
-    </div>
+
       {/* Delete Account Modal */}
       {showDeleteConfirm && (
         <div className={styles.modalOverlay} onClick={() => setShowDeleteConfirm(false)}>
