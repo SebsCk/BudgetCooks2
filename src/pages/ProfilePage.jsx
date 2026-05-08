@@ -30,6 +30,30 @@ function RecipeMini({ recipe }) {
         </p>
       </div>
     </Link>
+      {/* Delete Account Modal */}
+      {showDeleteConfirm && (
+        <div className={styles.modalOverlay} onClick={() => setShowDeleteConfirm(false)}>
+          <div className={styles.modal} onClick={e => e.stopPropagation()}>
+            <div className={styles.modalIcon}>⚠️</div>
+            <h3>Delete Your Account?</h3>
+            <p>Your account will be permanently deleted. Your recipes and forum posts will remain but show as <strong>Deleted User</strong> — only admins can remove them.</p>
+            <p style={{fontSize:'0.85rem',color:'#888',marginTop:'0.5rem'}}>Tip: delete your posts first if you want them removed.</p>
+            {deleteError && <p className={styles.deleteError}>{deleteError}</p>}
+            <input
+              type="password" placeholder="Enter your password to confirm"
+              value={deletePassword} onChange={e => setDeletePassword(e.target.value)}
+              className={styles.deleteInput}
+            />
+            <div className={styles.modalActions}>
+              <button className={styles.modalCancel} onClick={() => { setShowDeleteConfirm(false); setDeletePassword(''); setDeleteError('') }}>Cancel</button>
+              <button className={styles.modalConfirm} onClick={handleDeleteAccount} disabled={deleting}>
+                {deleting ? 'Deleting…' : 'Delete My Account'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
   )
 }
 
@@ -46,6 +70,10 @@ export default function ProfilePage() {
   const [bookmarks, setBookmarks] = useState([])
 
   const isMe = user?.username === username
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [deletePassword, setDeletePassword] = useState('')
+  const [deleteError, setDeleteError] = useState('')
+  const [deleting, setDeleting] = useState(false)
 
   useEffect(() => {
     setLoading(true)
@@ -87,6 +115,26 @@ export default function ProfilePage() {
     ...(isMe ? [{ id: 'saved', label: `🔖 Saved (${bookmarks.length})` }] : []),
   ]
 
+  const handleDeleteAccount = async () => {
+    if (!deletePassword) { setDeleteError('Please enter your password to confirm.'); return }
+    setDeleting(true); setDeleteError('')
+    try {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:4000'}/auth/me`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: deletePassword })
+      })
+      if (res.ok) {
+        localStorage.removeItem('token')
+        window.location.href = '/'
+      } else {
+        const d = await res.json()
+        setDeleteError(d.error || 'Failed to delete account.')
+      }
+    } catch { setDeleteError('Network error.') }
+    finally { setDeleting(false) }
+  }
+
   return (
     <div className={styles.page}>
       {/* Hero */}
@@ -102,7 +150,10 @@ export default function ProfilePage() {
           </div>
         </div>
         {isMe && (
-          <button className={styles.editBtn} onClick={() => navigate('/share')}>+ Add Recipe</button>
+          <div className={styles.heroActions}>
+            <button className={styles.editBtn} onClick={() => navigate('/share')}>+ Add Recipe</button>
+            <button className={styles.dangerBtn} onClick={() => setShowDeleteConfirm(true)}>Delete Account</button>
+          </div>
         )}
       </div>
 
@@ -150,6 +201,30 @@ export default function ProfilePage() {
             : <div className={styles.grid}>{bookmarks.map(r => <RecipeMini key={r.id} recipe={r} />)}</div>
         )}
       </div>
+    </div>
+      {/* Delete Account Modal */}
+      {showDeleteConfirm && (
+        <div className={styles.modalOverlay} onClick={() => setShowDeleteConfirm(false)}>
+          <div className={styles.modal} onClick={e => e.stopPropagation()}>
+            <div className={styles.modalIcon}>⚠️</div>
+            <h3>Delete Your Account?</h3>
+            <p>Your account will be permanently deleted. Your recipes and forum posts will remain but show as <strong>Deleted User</strong> — only admins can remove them.</p>
+            <p style={{fontSize:'0.85rem',color:'#888',marginTop:'0.5rem'}}>Tip: delete your posts first if you want them removed.</p>
+            {deleteError && <p className={styles.deleteError}>{deleteError}</p>}
+            <input
+              type="password" placeholder="Enter your password to confirm"
+              value={deletePassword} onChange={e => setDeletePassword(e.target.value)}
+              className={styles.deleteInput}
+            />
+            <div className={styles.modalActions}>
+              <button className={styles.modalCancel} onClick={() => { setShowDeleteConfirm(false); setDeletePassword(''); setDeleteError('') }}>Cancel</button>
+              <button className={styles.modalConfirm} onClick={handleDeleteAccount} disabled={deleting}>
+                {deleting ? 'Deleting…' : 'Delete My Account'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

@@ -17,7 +17,8 @@ router.get('/', async (req, res) => {
   try {
     const [rows] = await db.query(`
       SELECT f.id, f.title, f.body, f.category, f.created_at, f.updated_at, f.edited_at,
-             u.username AS author, u.role AS author_role,
+             CASE WHEN u.is_deleted = 1 THEN 'Deleted User' ELSE u.username END AS author,
+             CASE WHEN u.is_deleted = 1 THEN 'member' ELSE u.role END AS author_role,
              COUNT(fr.id) AS reply_count
       FROM forums f
       JOIN users u ON u.id = f.user_id
@@ -34,12 +35,12 @@ router.get('/', async (req, res) => {
 router.get('/:id', async (req, res) => {
   try {
     const [forums] = await db.query(`
-      SELECT f.*, u.username AS author, u.role AS author_role
+      SELECT f.*, CASE WHEN u.is_deleted = 1 THEN 'Deleted User' ELSE u.username END AS author, CASE WHEN u.is_deleted = 1 THEN 'member' ELSE u.role END AS author_role
       FROM forums f JOIN users u ON u.id = f.user_id
       WHERE f.id = ? AND f.deleted = 0`, [req.params.id]);
     if (!forums.length) return res.status(404).json({ error: 'Not found' });
     const [replies] = await db.query(`
-      SELECT fr.id, fr.body, fr.created_at, fr.edited_at, u.username AS author, u.role AS author_role
+      SELECT fr.id, fr.body, fr.created_at, fr.edited_at, CASE WHEN u.is_deleted = 1 THEN 'Deleted User' ELSE u.username END AS author, CASE WHEN u.is_deleted = 1 THEN 'member' ELSE u.role END AS author_role
       FROM forum_replies fr JOIN users u ON u.id = fr.user_id
       WHERE fr.forum_id = ? AND fr.deleted = 0
       ORDER BY fr.created_at ASC`, [req.params.id]);

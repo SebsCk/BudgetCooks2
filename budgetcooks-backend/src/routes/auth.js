@@ -128,4 +128,30 @@ router.get('/me', authenticate, async (req, res) => {
   res.json(rows[0]);
 });
 
+
+// DELETE /auth/me — user deletes their own account (soft delete, password required)
+router.delete('/me', authenticate, async (req, res) => {
+  const { password } = req.body;
+  if (!password) return res.status(400).json({ error: 'Password is required.' });
+  try {
+    const userId = req.user.id;
+    const [rows] = await db.query('SELECT password_hash FROM users WHERE id = ?', [userId]);
+    if (!rows.length) return res.status(404).json({ error: 'User not found.' });
+    const valid = await bcrypt.compare(password, rows[0].password_hash);
+    if (!valid) return res.status(401).json({ error: 'Incorrect password.' });
+    // Wipe PII but keep the row so posts say "Deleted User"
+    await db.query(
+      `UPDATE users SET
+        is_deleted    = 1,
+        deleted_at    = NOW(),
+        email         = CONCAT('deleted_', id, '@deleted.invalid'),
+        password_hash = '',
+        avatar_url    = NULL
+       WHERE id = ?`,
+      [userId]
+    );
+    res.json({ message: 'Account deleted' });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
 module.exports = router;

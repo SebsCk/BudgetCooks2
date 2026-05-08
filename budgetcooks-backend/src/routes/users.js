@@ -152,11 +152,20 @@ router.put('/:id/role', authenticate, authorizeAdmin, async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// DELETE /api/users/:id — admin: delete user
+// DELETE /api/users/:id — admin: soft-delete user (keeps posts as "Deleted User")
 router.delete('/:id', authenticate, authorizeAdmin, async (req, res) => {
   try {
-    await db.query('DELETE FROM users WHERE id = ?', [req.params.id]);
-    res.json({ message: 'User deleted' });
+    await db.query(
+      `UPDATE users SET
+        is_deleted    = 1,
+        deleted_at    = NOW(),
+        email         = CONCAT('deleted_', id, '@deleted.invalid'),
+        password_hash = '',
+        avatar_url    = NULL
+       WHERE id = ?`,
+      [req.params.id]
+    );
+    res.json({ message: 'User account deleted. Their posts now show as Deleted User.' });
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 

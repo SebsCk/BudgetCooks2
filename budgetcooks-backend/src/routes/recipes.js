@@ -31,6 +31,14 @@ router.get('/', async (req, res) => {
   if (category) { where += ' AND c.slug = ?'; params.push(category); }
   if (q)        { where += ' AND r.title LIKE ?'; params.push(`%${q}%`); }
 
+  const userBookmarkedCol = userId
+    ? `MAX(CASE WHEN ub.user_id = ${parseInt(userId)} THEN 1 ELSE 0 END) AS user_bookmarked,`
+    : `0 AS user_bookmarked,`;
+
+  const userBookmarkedJoin = userId
+    ? `LEFT JOIN bookmarks ub ON ub.recipe_id = r.id AND ub.user_id = ${parseInt(userId)}`
+    : '';
+
   const userLikedCol = userId
     ? `MAX(CASE WHEN ul.user_id = ${parseInt(userId)} THEN 1 ELSE 0 END) AS user_liked`
     : `0 AS user_liked`;
@@ -43,21 +51,24 @@ const sql = `
     SELECT r.id, r.title, r.description, r.estimated_cost,
            r.prep_time_mins, r.cook_time_mins, r.servings,
            r.image_url, r.created_at,
-           CASE WHEN r.anonymous = 1 THEN 'Anonymous' ELSE u.username END AS author,
-           CASE WHEN r.anonymous = 1 THEN NULL ELSE u.avatar_url END AS author_avatar,
+           CASE WHEN u.is_deleted = 1 THEN 'Deleted User' WHEN r.anonymous = 1 THEN 'Anonymous' ELSE u.username END AS author,
+           CASE WHEN u.is_deleted = 1 OR r.anonymous = 1 THEN NULL ELSE u.avatar_url END AS author_avatar,
            c.name AS category,
            COUNT(DISTINCT l.id) AS like_count,
            COUNT(DISTINCT cm.id) AS comment_count,
            ${userLikedCol}
+           ${userBookmarkedCol}
+           r.pinned
     FROM recipes r
     LEFT JOIN users u    ON u.id = r.user_id
     LEFT JOIN categories c ON c.id = r.category_id
     LEFT JOIN likes l    ON l.recipe_id = r.id
     LEFT JOIN comments cm ON cm.recipe_id = r.id
     ${userLikedJoin}
+    ${userBookmarkedJoin}
     ${where}
     GROUP BY r.id
-    ORDER BY ${order}
+    ORDER BY r.pinned DESC, ${order}
     LIMIT ? OFFSET ?
   `;
   params.push(parseInt(limit), parseInt(offset));
@@ -70,8 +81,8 @@ const sql = `
 router.get('/:id', async (req, res) => {
   const [recipes] = await db.query(`
     SELECT r.*, 
-           CASE WHEN r.anonymous = 1 THEN 'Anonymous' ELSE u.username END AS author,
-           CASE WHEN r.anonymous = 1 THEN NULL ELSE u.avatar_url END AS author_avatar,
+           CASE WHEN u.is_deleted = 1 THEN 'Deleted User' WHEN r.anonymous = 1 THEN 'Anonymous' ELSE u.username END AS author,
+           CASE WHEN u.is_deleted = 1 OR r.anonymous = 1 THEN NULL ELSE u.avatar_url END AS author_avatar,
            u.id AS author_id,
            c.name AS category, c.slug AS category_slug,
            COUNT(DISTINCT l.id) AS like_count,
