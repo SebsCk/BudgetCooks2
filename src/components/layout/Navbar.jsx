@@ -15,10 +15,14 @@ export default function Navbar() {
   const [menuOpen,    setMenuOpen]    = useState(false)
   const [dropOpen,    setDropOpen]    = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
+  const [notifs,      setNotifs]      = useState([])
+  const [notifOpen,   setNotifOpen]   = useState(false)
+  const [notifSeen,   setNotifSeen]   = useState(0)
   const { user, logout }              = useAuth()
   const navigate                      = useNavigate()
   const location                      = useLocation()
   const dropRef                       = useRef(null)
+  const notifRef                      = useRef(null)
 
   useEffect(() => {
     const handler = (e) => {
@@ -31,6 +35,24 @@ export default function Navbar() {
   useEffect(() => {
     if (!location.search.includes('search=')) setSearchQuery('')
   }, [location])
+
+  useEffect(() => {
+    if (!user) return
+    const token = localStorage.getItem('token')
+    fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:4000'}/api/users/me/notifications`, {
+      headers: { Authorization: `Bearer ${token}` }
+    }).then(r => r.ok ? r.json() : []).then(data => {
+      if (Array.isArray(data)) setNotifs(data)
+    }).catch(() => {})
+  }, [user])
+
+  useEffect(() => {
+    const handler = (e) => {
+      if (notifRef.current && !notifRef.current.contains(e.target)) setNotifOpen(false)
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [])
 
   const handleLogout = () => { logout(); setDropOpen(false); navigate('/') }
 
@@ -76,6 +98,31 @@ export default function Navbar() {
 
         <div className={styles.actions}>
           {user ? (
+            <>
+            <div className={styles.notifWrap} ref={notifRef}>
+              <button className={styles.notifBtn} onClick={() => { setNotifOpen(o => !o); setNotifSeen(notifs.length) }} aria-label="Notifications">
+                🔔
+                {notifs.length > notifSeen && (
+                  <span className={styles.notifBadge}>{notifs.length - notifSeen}</span>
+                )}
+              </button>
+              {notifOpen && (
+                <div className={styles.notifDropdown}>
+                  <div className={styles.notifHeader}>Notifications</div>
+                  {notifs.length === 0
+                    ? <p className={styles.notifEmpty}>No notifications yet</p>
+                    : notifs.slice(0, 10).map((n, i) => (
+                      <div key={i} className={styles.notifItem} onClick={() => { navigate(`/feed?recipe=${n.recipe_id}`); setNotifOpen(false) }}>
+                        <span className={styles.notifIcon}>{n.type === 'like' ? '❤️' : '💬'}</span>
+                        <span className={styles.notifText}>
+                          <strong>{n.actor}</strong> {n.type === 'like' ? 'liked' : 'commented on'} <em>{n.recipe_title}</em>
+                        </span>
+                      </div>
+                    ))
+                  }
+                </div>
+              )}
+            </div>
             <div className={styles.profileWrap} ref={dropRef}>
               <button className={styles.avatarBtn} onClick={() => setDropOpen(o => !o)} aria-label="Profile menu">
                 <span className={styles.avatarCircle}>{user.username.slice(0,2).toUpperCase()}</span>
@@ -93,6 +140,7 @@ export default function Navbar() {
                     </div>
                   </div>
                   <hr className={styles.dropDivider} />
+                  <Link to={`/profile/${user?.username}`} className={styles.dropItem} onClick={() => setDropOpen(false)}>👤 My Profile</Link>
                   <Link to="/shopping-list" className={styles.dropItem} onClick={() => setDropOpen(false)}>🛒 Shopping List</Link>
                   <Link to="/meal-planner"  className={styles.dropItem} onClick={() => setDropOpen(false)}>📅 Meal Planner</Link>
                   <hr className={styles.dropDivider} />
@@ -103,6 +151,8 @@ export default function Navbar() {
                 </div>
               )}
             </div>
+            </div>
+            </>
           ) : (
             <>
               <Link to="/login"  className="btn btn-outline">Log in</Link>

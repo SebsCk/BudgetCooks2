@@ -13,7 +13,7 @@ function timeAgo(ts) {
   return new Date(ts).toLocaleDateString()
 }
 
-function CommentNode({ comment, token, currentUser, recipeId, onReply, depth = 0 }) {
+function CommentNode({ comment, token, currentUser, recipeId, onReply, onDelete, depth = 0 }) {
   const [showReply, setShowReply] = useState(false)
   const [replyText, setReplyText] = useState('')
   const [submitting, setSubmitting] = useState(false)
@@ -52,11 +52,18 @@ function CommentNode({ comment, token, currentUser, recipeId, onReply, depth = 0
         </div>
         <p className={styles.commentBody}>{comment.body}</p>
 
-        {token && (
-          <button className={styles.replyBtn} onClick={() => setShowReply(v => !v)}>
-            {showReply ? 'Cancel' : '↩ Reply'}
-          </button>
-        )}
+        <div className={styles.commentActions}>
+          {token && (
+            <button className={styles.replyBtn} onClick={() => setShowReply(v => !v)}>
+              {showReply ? 'Cancel' : '↩ Reply'}
+            </button>
+          )}
+          {(comment.author === currentUser?.username || currentUser?.role === 'admin') && (
+            <button className={styles.deleteCommentBtn} onClick={() => onDelete(comment.id)}>
+              🗑 Delete
+            </button>
+          )}
+        </div>
 
         {showReply && (
           <div className={styles.replyRow}>
@@ -79,7 +86,7 @@ function CommentNode({ comment, token, currentUser, recipeId, onReply, depth = 0
 
         {comment.replies?.map(r => (
           <CommentNode key={r.id} comment={r} token={token} currentUser={currentUser}
-            recipeId={recipeId} onReply={onReply} depth={depth + 1} />
+            recipeId={recipeId} onReply={onReply} onDelete={onDelete} depth={depth + 1} />
         ))}
       </div>
     </div>
@@ -137,6 +144,23 @@ export default function RecipeCommentsPage() {
     } finally { setPosting(false) }
   }
 
+  const deleteComment = async (commentId) => {
+    if (!window.confirm('Delete this comment?')) return
+    try {
+      const res = await fetch(`${API}/api/comments/${commentId}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      if (res.ok) {
+        // remove from top-level or from replies
+        setComments(cs => cs
+          .filter(c => c.id !== commentId)
+          .map(c => ({ ...c, replies: (c.replies || []).filter(r => r.id !== commentId) }))
+        )
+      }
+    } catch (err) { console.error(err) }
+  }
+
   const handleReply = (reply) => {
     setComments(cs => cs.map(c =>
       c.id === reply.parent_id ? { ...c, replies: [...(c.replies || []), reply] } : c
@@ -189,7 +213,7 @@ export default function RecipeCommentsPage() {
           : <div className={styles.commentList}>
               {comments.map(c => (
                 <CommentNode key={c.id} comment={c} token={token} currentUser={user}
-                  recipeId={id} onReply={handleReply} depth={0} />
+                  recipeId={id} onReply={handleReply} onDelete={deleteComment} depth={0} />
               ))}
             </div>
         }

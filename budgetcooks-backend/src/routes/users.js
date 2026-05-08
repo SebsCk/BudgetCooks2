@@ -44,6 +44,37 @@ router.get('/top-cooks', async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
+
+// GET /api/users/me/notifications — recent likes + comments on user's recipes
+router.get('/me/notifications', authenticate, async (req, res) => {
+  try {
+    const [likes] = await db.query(`
+      SELECT 'like' AS type, u.username AS actor, r.title AS recipe_title,
+             r.id AS recipe_id, l.created_at
+      FROM likes l
+      JOIN users u ON u.id = l.user_id
+      JOIN recipes r ON r.id = l.recipe_id
+      WHERE r.user_id = ? AND l.user_id != ?
+      ORDER BY l.created_at DESC LIMIT 20
+    `, [req.user.id, req.user.id]);
+
+    const [comments] = await db.query(`
+      SELECT 'comment' AS type, u.username AS actor, r.title AS recipe_title,
+             r.id AS recipe_id, c.body AS preview, c.created_at
+      FROM comments c
+      JOIN users u ON u.id = c.user_id
+      JOIN recipes r ON r.id = c.recipe_id
+      WHERE r.user_id = ? AND c.user_id != ?
+      ORDER BY c.created_at DESC LIMIT 20
+    `, [req.user.id, req.user.id]);
+
+    const all = [...likes, ...comments]
+      .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+      .slice(0, 30);
+    res.json(all);
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
 // ── ADMIN ROUTES (must be defined BEFORE /:username wildcard) ──────────────
 
 // GET /api/users — admin: list all users
@@ -130,6 +161,40 @@ router.delete('/:id', authenticate, authorizeAdmin, async (req, res) => {
 });
 
 // ── PUBLIC PROFILE (wildcard — keep LAST) ─────────────────────────────────
+
+// GET /api/users/me/bookmarks
+router.get('/me/bookmarks', authenticate, async (req, res) => {
+  try {
+    const [rows] = await db.query(`
+      SELECT r.id, r.title, r.estimated_cost, r.image_url, r.created_at,
+             CASE WHEN r.anonymous=1 THEN 'Anonymous' ELSE u.username END AS author,
+             COUNT(DISTINCT l.id) AS like_count
+      FROM bookmarks b
+      JOIN recipes r ON r.id = b.recipe_id
+      JOIN users u   ON u.id = r.user_id
+      LEFT JOIN likes l ON l.recipe_id = r.id
+      WHERE b.user_id = ?
+      GROUP BY r.id ORDER BY b.created_at DESC
+    `, [req.user.id]);
+    res.json(rows);
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// POST /api/users/me/bookmarks/:recipeId — toggle bookmark
+router.post('/me/bookmarks/:recipeId', authenticate, async (req, res) => {
+  const { recipeId } = req.params;
+  try {
+    const [existing] = await db.query(
+      'SELECT id FROM bookmarks WHERE user_id=? AND recipe_id=?', [req.user.id, recipeId]
+    );
+    if (existing.length) {
+      await db.query('DELETE FROM bookmarks WHERE user_id=? AND recipe_id=?', [req.user.id, recipeId]);
+      return res.json({ bookmarked: false });
+    }
+    await db.query('INSERT INTO bookmarks (user_id, recipe_id) VALUES (?,?)', [req.user.id, recipeId]);
+    res.json({ bookmarked: true });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
 
 router.get('/:username', async (req, res) => {
   try {
