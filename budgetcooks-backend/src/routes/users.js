@@ -181,4 +181,26 @@ router.get('/:username', async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
+// PATCH /api/users/:id/suspend — toggle user suspension
+router.patch('/:id/suspend', authenticate, authorizeAdmin, async (req, res) => {
+  try {
+    const [rows] = await db.query('SELECT suspended FROM users WHERE id = ?', [req.params.id]);
+    if (!rows.length) return res.status(404).json({ error: 'User not found' });
+    const newVal = rows[0].suspended ? 0 : 1;
+    await db.query('UPDATE users SET suspended = ? WHERE id = ?', [newVal, req.params.id]);
+    res.json({ suspended: !!newVal });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// PATCH /api/users/admin/recipes/:id/pin — toggle pinned/featured
+router.patch('/admin/recipes/:id/pin', authenticate, authorizeAdmin, async (req, res) => {
+  try {
+    const [rows] = await db.query('SELECT pinned FROM recipes WHERE id = ?', [req.params.id]);
+    if (!rows.length) return res.status(404).json({ error: 'Not found' });
+    const newVal = rows[0].pinned ? 0 : 1;
+    await db.query('UPDATE recipes SET pinned = ? WHERE id = ?', [newVal, req.params.id]);
+    res.json({ pinned: !!newVal });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
 module.exports = router;

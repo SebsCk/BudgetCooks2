@@ -38,6 +38,13 @@ router.post('/register', [
       { expiresIn: process.env.JWT_EXPIRES_IN }
     );
 
+    // log signup activity
+    try {
+      await db.query(
+        'INSERT INTO activity_log (user_id, role, action, entity, entity_id, meta) VALUES (?,?,?,?,?,?)',
+        [result.insertId, 'member', 'joined', 'user', result.insertId, JSON.stringify({ username })]
+      );
+    } catch {}
     res.status(201).json({ token, user: { id: result.insertId, username, email, role: 'member' } });
   } catch (err) {
     res.status(500).json({ error: 'Registration failed' });

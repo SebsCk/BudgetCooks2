@@ -14,6 +14,7 @@ import AboutPage           from './pages/AboutPage'
 import ForumPage from './pages/ForumPage'
 import ShareRecipePage     from './pages/ShareRecipePage'
 import RecipeCommentsPage  from './pages/RecipeCommentsPage'
+import ErrorBoundary from './components/ErrorBoundary'
 import './index.css'
 
 export default function App() {
@@ -21,6 +22,7 @@ export default function App() {
     <AuthProvider>
       <BrowserRouter>
         <Navbar />
+        <ErrorBoundary>
         <Routes>
           <Route path="/"              element={<Home />}            />
           <Route path="/feed"          element={<FeedPage />}        />
@@ -36,6 +38,7 @@ export default function App() {
           <Route path="/meal-planner"  element={<MealPlanner />}     />
           <Route path="/recipe/:id/comments" element={<RecipeCommentsPage />} />
         </Routes>
+        </ErrorBoundary>
       </BrowserRouter>
     </AuthProvider>
   )

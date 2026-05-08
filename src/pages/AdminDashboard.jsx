@@ -158,6 +158,26 @@ export default function AdminDashboard() {
     } catch {}
   }
 
+  const suspendUser = async (u) => {
+    try {
+      const res = await fetch(`${API}/api/users/${u.id}/suspend`, { method:'PATCH', headers:authH })
+      if (res.ok) {
+        const { suspended } = await res.json()
+        setUsers(us => us.map(x => x.id===u.id ? {...x, suspended} : x))
+      }
+    } catch {}
+  }
+
+  const pinRecipe = async (recipe) => {
+    try {
+      const res = await fetch(`${API}/api/users/admin/recipes/${recipe.id}/pin`, { method:'PATCH', headers:authH })
+      if (res.ok) {
+        const { pinned } = await res.json()
+        setFavorites(fs => fs.map(f => f.id===recipe.id ? {...f, pinned} : f))
+      }
+    } catch {}
+  }
+
   const filteredUsers = users.filter(u =>
     u.username.toLowerCase().includes(userSearch.toLowerCase()) ||
     u.email.toLowerCase().includes(userSearch.toLowerCase())
@@ -295,11 +315,20 @@ export default function AdminDashboard() {
                           </div>
                         </td>
                         <td className={styles.emailCell}>{u.email}</td>
-                        <td><span className={`${styles.rolePill} ${u.role==='admin'?styles.roleAdmin:''}`}>{u.role}</span></td>
+                        <td>
+                          <span className={`${styles.rolePill} ${u.role==='admin'?styles.roleAdmin:''}`}>{u.role}</span>
+                          {u.suspended ? <span className={styles.rolePill} style={{background:'#e74c3c',color:'#fff',marginLeft:4}}>suspended</span> : null}
+                        </td>
                         <td className={styles.dateCell}>{new Date(u.created_at).toLocaleDateString()}</td>
                         <td>
                           <div className={styles.actionBtns}>
                             {u.role!=='admin' && <button className={styles.promoteBtn} onClick={()=>promoteUser(u)}>⬆ Admin</button>}
+                            <button
+                              className={u.suspended ? styles.promoteBtn : styles.deleteBtn}
+                              style={{background: u.suspended ? '#5C6E42' : '#D4943A'}}
+                              onClick={()=>suspendUser(u)}>
+                              {u.suspended ? '✅ Unsuspend' : '🔒 Suspend'}
+                            </button>
                             <button className={styles.deleteBtn} onClick={()=>setDeleteModal(u)}>🗑 Delete</button>
                           </div>
                         </td>
@@ -430,13 +459,14 @@ export default function AdminDashboard() {
                       <th>❤️ Likes</th>
                       <th>Cost (₱)</th>
                       <th>Posted</th>
+                      <th>Pin</th>
                     </tr>
                   </thead>
                   <tbody>
                     {favorites.map((f, i) => (
                       <tr key={f.id}>
                         <td style={{fontWeight:700,color:'var(--terra)'}}>{i + 1}</td>
-                        <td style={{fontWeight:600}}>{f.title}</td>
+                        <td style={{fontWeight:600}}>{f.pinned ? '📌 ' : ''}{f.title}</td>
                         <td>
                           <span className={styles.rolePill}>{f.author}</span>
                         </td>
@@ -445,6 +475,12 @@ export default function AdminDashboard() {
                         </td>
                         <td>₱{f.estimated_cost || '—'}</td>
                         <td className={styles.dateCell}>{new Date(f.created_at).toLocaleDateString()}</td>
+                        <td>
+                          <button className={styles.promoteBtn} onClick={() => pinRecipe(f)}
+                            style={{background: f.pinned ? '#C1502A' : '#5C6E42'}}>
+                            {f.pinned ? '📌 Unpin' : '📌 Pin'}
+                          </button>
+                        </td>
                       </tr>
                     ))}
                   </tbody>

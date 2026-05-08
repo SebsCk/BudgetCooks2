@@ -54,6 +54,13 @@ router.post('/', authenticate, async (req, res) => {
     [recipe_id, req.user.id, parent_id || null, body.trim()]
   );
 
+  // log comment activity
+  try {
+    await db.query(
+      'INSERT INTO activity_log (user_id, role, action, entity, entity_id, meta) VALUES (?,?,?,?,?,?)',
+      [req.user.id, req.user.role || 'member', 'commented', 'recipe', recipe_id, JSON.stringify({ body: body.trim().slice(0, 80) })]
+    );
+  } catch {}
   res.status(201).json({ id: result.insertId, message: 'Comment posted' });
 });
 

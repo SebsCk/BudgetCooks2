@@ -367,7 +367,10 @@ export default function FeedPage() {
   const [loading,   setLoading]   = useState(true)
   const [activeTab, setActiveTab] = useState(0)
   const [likes,     setLikes]     = useState({})
+  const likePending = useRef({})
   const [search,    setSearch]    = useState('')
+  const [debouncedSearch, setDebouncedSearch] = useState('')
+  const searchTimer = useRef(null)
   const [filterCat, setFilterCat] = useState('All')
   const [editRecipe, setEditRecipe] = useState(null)
   const navigate = useNavigate()
@@ -379,7 +382,11 @@ export default function FeedPage() {
   const urlSearch   = params.get('search')   || ''
 
   useEffect(() => { setFilterCat(urlCategory) }, [urlCategory])
-  useEffect(() => { setSearch(urlSearch) },      [urlSearch])
+  useEffect(() => { 
+    clearTimeout(searchTimer.current)
+    searchTimer.current = setTimeout(() => setDebouncedSearch(urlSearch), 300)
+    setSearch(urlSearch)
+  }, [urlSearch])
 
   useEffect(() => {
     setLoading(true)
@@ -404,7 +411,7 @@ export default function FeedPage() {
   const displayed = useMemo(() => {
     let list = [...recipes]
     if (filterCat !== 'All') list = list.filter(r => r.category === filterCat)
-    const q = search || urlSearch
+    const q = debouncedSearch || urlSearch
     if (q) list = list.filter(r =>
       r.title?.toLowerCase().includes(q.toLowerCase()) ||
       r.author?.toLowerCase().includes(q.toLowerCase())
@@ -492,6 +499,8 @@ export default function FeedPage() {
                 onLike={async (id) => {
                   const token = localStorage.getItem('token')
                   if (!token) { navigate('/login'); return }
+                  if (likePending.current[id]) return  // debounce rapid clicks
+                  likePending.current[id] = true
                   try {
                     const res = await fetch(`${API}/api/recipes/${id}/like`, {
                       method: 'POST',
@@ -500,7 +509,6 @@ export default function FeedPage() {
                     if (res.ok) {
                       const { liked } = await res.json()
                       setLikes(p => ({ ...p, [id]: liked }))
-                      // update the authoritative count in recipes array
                       setRecipes(rs => rs.map(r =>
                         r.id === id
                           ? { ...r, like_count: (parseInt(r.like_count) || 0) + (liked ? 1 : -1) }
@@ -508,6 +516,7 @@ export default function FeedPage() {
                       ))
                     }
                   } catch (err) { console.error(err) }
+                  finally { delete likePending.current[id] }
                 }}
                 currentUser={currentUser}
                 onDelete={handleDeleteRecipe}
