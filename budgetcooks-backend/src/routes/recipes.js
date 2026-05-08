@@ -39,7 +39,7 @@ router.get('/', async (req, res) => {
     ? `LEFT JOIN likes ul ON ul.recipe_id = r.id AND ul.user_id = ${parseInt(userId)}`
     : '';
 
-  const sql = `
+const sql = `
     SELECT r.id, r.title, r.description, r.estimated_cost,
            r.prep_time_mins, r.cook_time_mins, r.servings,
            r.image_url, r.created_at,
@@ -49,7 +49,6 @@ router.get('/', async (req, res) => {
            COUNT(DISTINCT l.id) AS like_count,
            COUNT(DISTINCT cm.id) AS comment_count,
            ${userLikedCol}
-           r.challenge_id
     FROM recipes r
     LEFT JOIN users u    ON u.id = r.user_id
     LEFT JOIN categories c ON c.id = r.category_id
