@@ -1,7 +1,7 @@
-const express = require('express');
-const db      = require('../db');
+const express  = require('express');
+const db       = require('../db');
+const jwt      = require('jsonwebtoken');  // ← add this at the top
 const { authenticate } = require('../middleware/auth');
-
 const router = express.Router();
 
 // GET /api/recipes — feed with infinite scroll
@@ -13,7 +13,6 @@ router.get('/', async (req, res) => {
   try {
     const authHeader = req.headers.authorization || '';
     if (authHeader.startsWith('Bearer ')) {
-      const jwt = require('jsonwebtoken');
       const payload = jwt.verify(authHeader.slice(7), process.env.JWT_SECRET);
       userId = payload.id || payload.userId || null;
     }
