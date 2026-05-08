@@ -15,7 +15,10 @@ const app  = express();
 const PORT = process.env.PORT || 4000;
 
 app.use(cors({
-  origin: function(origin, callback) { callback(null, true); },
+  origin: [
+    'http://localhost:5173',
+    'https://budget-cooks2.vercel.app',
+  ],
   credentials: true,
   methods: ['GET','POST','PUT','PATCH','DELETE','OPTIONS'],
   allowedHeaders: ['Content-Type','Authorization'],
