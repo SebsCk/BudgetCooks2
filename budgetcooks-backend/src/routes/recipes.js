@@ -40,8 +40,8 @@ router.get('/', async (req, res) => {
     : '';
 
   const userLikedCol = userId
-    ? `MAX(CASE WHEN ul.user_id = ${parseInt(userId)} THEN 1 ELSE 0 END) AS user_liked`
-    : `0 AS user_liked`;
+    ? `MAX(CASE WHEN ul.user_id = ${parseInt(userId)} THEN 1 ELSE 0 END) AS user_liked,`
+    : `0 AS user_liked,`;
 
   const userLikedJoin = userId
     ? `LEFT JOIN likes ul ON ul.recipe_id = r.id AND ul.user_id = ${parseInt(userId)}`
