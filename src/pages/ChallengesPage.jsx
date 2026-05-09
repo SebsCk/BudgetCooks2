@@ -87,8 +87,8 @@ function ChallengeCard({ ch, token, user, isAdmin, onRefresh }) {
                 </>
               )}
               {isAdmin && ch.status==='active' && (
-                <button className="btn btn-outline" style={{fontSize:'0.8rem',padding:'0.4rem 0.8rem'}}
-                  onClick={()=>changeStatus('closed')} disabled={busy}>Close</button>
+                <button className="btn btn-outline" style={{fontSize:'0.8rem',padding:'0.4rem 0.8rem',color:'var(--terra)',borderColor:'var(--terra)'}}
+                  onClick={()=>changeStatus('closed')} disabled={busy}>🔒 Close</button>
               )}
             </div>
           </div>

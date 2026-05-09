@@ -9,7 +9,7 @@ router.get('/stats', async (req, res) => {
   try {
     const [[users]]    = await db.query('SELECT COUNT(*) AS c FROM users');
     const [[recipes]]  = await db.query('SELECT COUNT(*) AS c FROM recipes');
-    const [[challs]]   = await db.query('SELECT COUNT(*) AS c FROM challenges');
+    const [[challs]]   = await db.query("SELECT COUNT(*) AS c FROM challenges WHERE status = 'active'");
     let avgMealCost = null;
     try {
       const [[avg]] = await db.query('SELECT ROUND(AVG(estimated_cost), 0) AS c FROM recipes WHERE estimated_cost IS NOT NULL');
