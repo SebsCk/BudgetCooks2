@@ -17,7 +17,9 @@ export default function Navbar() {
   const [searchQuery, setSearchQuery] = useState('')
   const [notifs,      setNotifs]      = useState([])
   const [notifOpen,   setNotifOpen]   = useState(false)
-  const [notifSeen,   setNotifSeen]   = useState(0)
+  const [notifSeenAt, setNotifSeenAt] = useState(() => {
+    return parseInt(localStorage.getItem('notifSeenAt') || '0', 10)
+  })
   const { user, logout }              = useAuth()
   const navigate                      = useNavigate()
   const location                      = useLocation()
@@ -34,7 +36,7 @@ export default function Navbar() {
 
   useEffect(() => {
     if (!location.search.includes('search=')) setSearchQuery('')
-  }, [location])
+  }, [location]  )
 
   useEffect(() => {
     if (!user) return
@@ -75,6 +77,19 @@ export default function Navbar() {
     if (location.search.includes('search=')) navigate('/feed')
   }
 
+  const unreadCount = notifs.filter(n => new Date(n.created_at).getTime() > notifSeenAt).length
+
+  const handleNotifToggle = () => {
+    setNotifOpen(o => {
+      if (!o) {
+        const now = Date.now()
+        localStorage.setItem('notifSeenAt', now)
+        setNotifSeenAt(now)
+      }
+      return !o
+    })
+  }
+
   return (
     <nav className={styles.nav}>
       <div className={styles.inner}>
@@ -107,10 +122,10 @@ export default function Navbar() {
           {user ? (
             <>
             <div className={styles.notifWrap} ref={notifRef}>
-              <button className={styles.notifBtn} onClick={() => { setNotifOpen(o => { if (!o) setNotifSeen(notifs.length); return !o }) }} aria-label="Notifications">
+              <button className={styles.notifBtn} onClick={handleNotifToggle} aria-label="Notifications">
                 🔔
-                {notifs.length > notifSeen && (
-                  <span className={styles.notifBadge}>{notifs.length - notifSeen}</span>
+                {unreadCount > 0 && (
+                  <span className={styles.notifBadge}>{unreadCount}</span>
                 )}
               </button>
               {notifOpen && (
