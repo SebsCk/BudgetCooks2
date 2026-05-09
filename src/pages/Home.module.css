@@ -113,28 +113,28 @@
 .sectionHd a { font-size: 0.8rem; }
 
 /* ── RECIPE LIST ──────────────────────────────────────────── */
-.recipeList { display: flex; flex-direction: column; gap: 0.9rem; }
+.recipeList { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1rem; }
 
 .recipeCard {
-  display: grid; grid-template-columns: 120px 1fr;
+  display: flex; flex-direction: column;
   background: var(--white); border: 1px solid var(--cream2);
-  border-radius: 9px; overflow: visible; cursor: pointer;
+  border-radius: 9px; overflow: hidden; cursor: pointer;
   transition: box-shadow 0.2s, transform 0.15s;
 }
 .recipeCard:hover {
   box-shadow: 0 4px 18px rgba(0,0,0,0.09);
-  transform: translateY(-1px);
+  transform: translateY(-2px);
 }
 
 .recipeImg {
   display: flex; align-items: center; justify-content: center;
-  font-size: 2.6rem; aspect-ratio: 1; flex-shrink: 0;
-  overflow: visible; position: relative; z-index: 1;
-  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+  font-size: 2.6rem; height: 140px; flex-shrink: 0;
+  overflow: hidden;
 }
-.recipeCard:hover .recipeImg {
-  transform: scale(1.35);
-}
+
+/* Photo variant */
+.recipeImgPhoto { width: 100%; height: 180px; overflow: hidden; flex-shrink: 0; }
+.recipePhoto { width: 100%; height: 100%; object-fit: cover; display: block; }
 
 .recipeBody { padding: 0.85rem 1rem; }
 
@@ -390,3 +390,38 @@
   font-size: 0.9rem;
 }
 .seeAllBtn:hover { text-decoration: underline; }
+
+/* ── Search bar inline in filterBar ── */
+.searchWrap { display: flex; gap: 0.4rem; align-items: center; margin-left: auto; }
+.searchInput { padding: 0.45rem 0.85rem; border: 1.5px solid var(--cream2); border-radius: 20px; font-size: 0.85rem; outline: none; min-width: 180px; }
+.searchInput:focus { border-color: var(--terra); }
+.clearSearchBtn { background: none; border: none; color: var(--warm-gray); cursor: pointer; font-size: 0.85rem; padding: 0.2rem 0.4rem; }
+.clearSearchBtn:hover { color: var(--terra); }
+
+/* ── Bookmark active ── */
+.bookmarked { color: var(--terra); }
+
+/* ── Recipe detail panel (steps + ingredients) ── */
+.detailPanel {
+  margin-top: 0.85rem; padding: 0.85rem; background: var(--cream);
+  border-radius: 8px; border: 1px solid var(--cream2);
+  display: flex; flex-direction: column; gap: 0.75rem;
+}
+.detailSection h4 { font-size: 0.88rem; font-weight: 700; color: var(--charcoal); margin-bottom: 0.4rem; }
+.ingredientList { margin: 0; padding-left: 1.2rem; font-size: 0.84rem; color: var(--charcoal); display: flex; flex-direction: column; gap: 0.2rem; }
+.stepList { margin: 0; padding-left: 1.2rem; font-size: 0.84rem; color: var(--charcoal); display: flex; flex-direction: column; gap: 0.35rem; }
+.noDetail { font-size: 0.83rem; color: var(--warm-gray); text-align: center; }
+
+/* ── Report box ── */
+.reportBox {
+  margin-top: 0.75rem; padding: 0.75rem; background: #fff8f8;
+  border: 1px solid #fca5a5; border-radius: 8px;
+  display: flex; flex-direction: column; gap: 0.5rem;
+}
+.reportLabel { font-size: 0.83rem; font-weight: 600; color: #b91c1c; margin: 0; }
+.reportSelect { padding: 0.4rem 0.65rem; border: 1px solid #fca5a5; border-radius: 6px; font-size: 0.83rem; background: #fff; }
+.reportActions { display: flex; gap: 0.5rem; justify-content: flex-end; }
+.reportCancel { padding: 0.3rem 0.85rem; border: 1px solid #ddd; background: #fff; border-radius: 6px; font-size: 0.8rem; cursor: pointer; }
+.reportSubmit { padding: 0.3rem 0.85rem; border: none; background: #b91c1c; color: #fff; border-radius: 6px; font-size: 0.8rem; cursor: pointer; font-weight: 600; }
+.reportSubmit:disabled { opacity: 0.5; cursor: default; }
+.reportSent { font-size: 0.83rem; color: #166534; margin: 0; text-align: center; }

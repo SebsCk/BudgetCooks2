@@ -222,17 +222,44 @@ function CommentThread({ comment, token, onReply, currentUser, recipeId, depth =
   )
 }
 
-function RecipeCard({ recipe, liked, onLike, currentUser, onDelete, onEdit }) {
+function RecipeCard({ recipe, liked, onLike, bookmarked, onBookmark, currentUser, onDelete, onEdit }) {
   const totalMins = (recipe.prep_time_mins || 0) + (recipe.cook_time_mins || 0)
   const timeStr   = totalMins ? `${totalMins} mins` : '—'
   const token     = localStorage.getItem('token')
 
-  const [showComments, setShowComments] = useState(false)
-  const [comments,     setComments]     = useState([])
+  const [showComments,   setShowComments]   = useState(false)
+  const [comments,       setComments]       = useState([])
   const [commentsLoaded, setCommentsLoaded] = useState(false)
-  const [commentText,  setCommentText]  = useState('')
-  const [posting,      setPosting]      = useState(false)
-  const [commentCount, setCommentCount] = useState(recipe.comment_count || 0)
+  const [commentText,    setCommentText]    = useState('')
+  const [posting,        setPosting]        = useState(false)
+  const [commentCount,   setCommentCount]   = useState(recipe.comment_count || 0)
+  const [detail,         setDetail]         = useState(null)
+  const [loadingDetail,  setLoadingDetail]  = useState(false)
+  const [reportOpen,     setReportOpen]     = useState(false)
+  const [reportReason,   setReportReason]   = useState('')
+  const [reportSent,     setReportSent]     = useState(false)
+
+  const openDetail = async () => {
+    if (detail) { setDetail(null); return }
+    setLoadingDetail(true)
+    try {
+      const res = await fetch(`${API}/api/recipes/${recipe.id}`)
+      if (res.ok) setDetail(await res.json())
+    } catch {}
+    finally { setLoadingDetail(false) }
+  }
+
+  const submitReport = async () => {
+    if (!reportReason.trim() || !token) return
+    try {
+      await fetch(`${API}/api/recipes/${recipe.id}/report`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ reason: reportReason }),
+      })
+      setReportSent(true)
+    } catch {}
+  }
 
   const loadComments = async () => {
     if (commentsLoaded) return
@@ -308,12 +335,22 @@ function RecipeCard({ recipe, liked, onLike, currentUser, onDelete, onEdit }) {
             <button className={`${styles.actionBtn} ${showComments ? styles.commentActive : ''}`} onClick={toggleComments}>
               💬 {commentCount}
             </button>
+            <button
+              className={`${styles.actionBtn} ${bookmarked ? styles.bookmarked : ''}`}
+              onClick={() => onBookmark && onBookmark(recipe.id)}
+              title={bookmarked ? 'Remove bookmark' : 'Save recipe'}>
+              {bookmarked ? '🔖' : '📌'}
+            </button>
+            <button className={styles.actionBtn} onClick={openDetail} title="View steps & ingredients">
+              {loadingDetail ? '…' : detail ? '✕' : '📋'}
+            </button>
             <button className={styles.actionBtn} onClick={handleCopyLink} title="Copy link">🔗</button>
+            {token && (
+              <button className={styles.actionBtn} onClick={() => setReportOpen(v => !v)} title="Report">🚩</button>
+            )}
             {(currentUser?.username === recipe.author || currentUser?.role === 'admin') && (<>
-              <button className={styles.editRecipeBtn}
-                onClick={() => onEdit && onEdit(recipe)}>✏️</button>
-              <button className={styles.deleteRecipeBtn}
-                onClick={() => onDelete && onDelete(recipe)}>🗑</button>
+              <button className={styles.editRecipeBtn} onClick={() => onEdit && onEdit(recipe)}>✏️</button>
+              <button className={styles.deleteRecipeBtn} onClick={() => onDelete && onDelete(recipe)}>🗑</button>
             </>)}
           </div>
           <div className={styles.author}>
@@ -322,7 +359,59 @@ function RecipeCard({ recipe, liked, onLike, currentUser, onDelete, onEdit }) {
           </div>
         </div>
 
-        {/* ── Comment Panel ── */}
+        {/* Steps + Ingredients */}
+        {detail && (
+          <div className={styles.detailPanel}>
+            {detail.ingredients?.length > 0 && (
+              <div>
+                <strong style={{fontSize:'0.85rem'}}>🛒 Ingredients</strong>
+                <ul style={{margin:'0.3rem 0 0',paddingLeft:'1.2rem',fontSize:'0.83rem',lineHeight:1.6}}>
+                  {detail.ingredients.map((ing, i) => (
+                    <li key={i}>{ing.quantity} {ing.unit} {ing.name}{ing.notes ? ` — ${ing.notes}` : ''}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {detail.steps?.length > 0 && (
+              <div style={{marginTop:'0.6rem'}}>
+                <strong style={{fontSize:'0.85rem'}}>👨‍🍳 Steps</strong>
+                <ol style={{margin:'0.3rem 0 0',paddingLeft:'1.2rem',fontSize:'0.83rem',lineHeight:1.6}}>
+                  {detail.steps.map(s => <li key={s.step_number}>{s.instruction}</li>)}
+                </ol>
+              </div>
+            )}
+            {!detail.ingredients?.length && !detail.steps?.length && (
+              <p style={{fontSize:'0.83rem',color:'var(--warm-gray)',margin:0}}>No steps or ingredients added yet.</p>
+            )}
+          </div>
+        )}
+
+        {/* Report form */}
+        {reportOpen && token && (
+          <div className={styles.reportBox}>
+            {reportSent ? (
+              <p className={styles.reportSent}>✅ Report submitted. Thank you!</p>
+            ) : (
+              <>
+                <p className={styles.reportLabel}>🚩 Report this recipe</p>
+                <select className={styles.reportSelect} value={reportReason} onChange={e => setReportReason(e.target.value)}>
+                  <option value="">Select a reason…</option>
+                  <option value="False or misleading information">False or misleading information</option>
+                  <option value="Sexual or inappropriate content">Sexual or inappropriate content</option>
+                  <option value="Spam or advertisement">Spam or advertisement</option>
+                  <option value="Hate speech or harassment">Hate speech or harassment</option>
+                  <option value="Other">Other</option>
+                </select>
+                <div className={styles.reportActions}>
+                  <button className={styles.reportCancel} onClick={() => setReportOpen(false)}>Cancel</button>
+                  <button className={styles.reportSubmit} onClick={submitReport} disabled={!reportReason}>Submit</button>
+                </div>
+              </>
+            )}
+          </div>
+        )}
+
+        {/* Comment Panel */}
         {showComments && (
           <div className={styles.commentPanel}>
             {comments.length === 0 && commentsLoaded && (
@@ -367,6 +456,7 @@ export default function FeedPage() {
   const [loading,   setLoading]   = useState(true)
   const [activeTab, setActiveTab] = useState(0)
   const [likes,     setLikes]     = useState({})
+  const [bookmarks, setBookmarks] = useState({})
   const likePending = useRef({})
   const [search,    setSearch]    = useState('')
   const [debouncedSearch, setDebouncedSearch] = useState('')
@@ -398,9 +488,13 @@ export default function FeedPage() {
         if (!Array.isArray(data)) return
         setRecipes(data)
         // seed liked state from server so it survives reloads
-        const initialLikes = {}
-        data.forEach(r => { if (r.user_liked) initialLikes[r.id] = true })
+        const initialLikes = {}, initialBookmarks = {}
+        data.forEach(r => {
+          if (r.user_liked) initialLikes[r.id] = true
+          if (r.user_bookmarked) initialBookmarks[r.id] = true
+        })
         setLikes(initialLikes)
+        setBookmarks(initialBookmarks)
       })
       .catch(() => setRecipes([]))
       .finally(() => setLoading(false))
@@ -424,6 +518,21 @@ export default function FeedPage() {
   }, [recipes, filterCat, search, urlSearch, activeTab])
 
   const hasFilter = search || urlSearch || filterCat !== 'All'
+
+  const handleBookmark = async (id) => {
+    const token = localStorage.getItem('token')
+    if (!token) { navigate('/login'); return }
+    try {
+      const res = await fetch(`${API}/api/users/me/bookmarks/${id}`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      if (res.ok) {
+        const { bookmarked } = await res.json()
+        setBookmarks(prev => ({ ...prev, [id]: bookmarked }))
+      }
+    } catch {}
+  }
 
   const handleDeleteRecipe = async (recipe) => {
     if (!window.confirm(`Delete "${recipe.title}"?`)) return
@@ -520,7 +629,9 @@ export default function FeedPage() {
                 }}
                 currentUser={currentUser}
                 onDelete={handleDeleteRecipe}
-                onEdit={setEditRecipe} />
+                onEdit={setEditRecipe}
+                bookmarked={!!bookmarks[r.id]}
+                onBookmark={handleBookmark} />
             ))}
           </div>
         )}

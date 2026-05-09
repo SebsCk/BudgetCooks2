@@ -36,6 +36,7 @@ router.get('/top-cooks', async (req, res) => {
       LEFT JOIN (
         SELECT recipe_id, COUNT(*) AS cnt FROM likes GROUP BY recipe_id
       ) l ON l.recipe_id = r.id
+      WHERE u.is_deleted = 0 OR u.is_deleted IS NULL
       GROUP BY u.id, u.username
       ORDER BY total_likes DESC, recipe_count DESC
       LIMIT 5
