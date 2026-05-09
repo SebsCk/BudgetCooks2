@@ -19,7 +19,7 @@ router.get('/', async (req, res) => {
   } catch {}
 
   const orderMap = {
-    hot:       '(like_count + comment_count * 2) DESC',
+    hot:       'r.created_at DESC',
     new:       'r.created_at DESC',
     top:       'like_count DESC',
   };
@@ -31,12 +31,8 @@ router.get('/', async (req, res) => {
   if (category) { where += ' AND c.slug = ?'; params.push(category); }
   if (q)        { where += ' AND r.title LIKE ?'; params.push(`%${q}%`); }
 
-  const userBookmarkedCol = userId
-    ? `MAX(CASE WHEN bm.user_id = ${parseInt(userId)} THEN 1 ELSE 0 END) AS user_bookmarked,`
-    : `0 AS user_bookmarked,`;
-  const userBookmarkedJoin = userId
-    ? `LEFT JOIN bookmarks bm ON bm.recipe_id = r.id AND bm.user_id = ${parseInt(userId)}`
-    : '';
+  const userBookmarkedCol = `0 AS user_bookmarked,`;
+  const userBookmarkedJoin = '';
 
   const userLikedCol = userId
     ? `MAX(CASE WHEN ul.user_id = ${parseInt(userId)} THEN 1 ELSE 0 END) AS user_liked,`
