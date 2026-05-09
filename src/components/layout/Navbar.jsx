@@ -39,11 +39,18 @@ export default function Navbar() {
   useEffect(() => {
     if (!user) return
     const token = localStorage.getItem('token')
-    fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:4000'}/api/users/me/notifications`, {
-      headers: { Authorization: `Bearer ${token}` }
-    }).then(r => r.ok ? r.json() : []).then(data => {
-      if (Array.isArray(data)) setNotifs(data)
-    }).catch(() => {})
+
+    const fetchNotifs = () => {
+      fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:4000'}/api/users/me/notifications`, {
+        headers: { Authorization: `Bearer ${token}` }
+      }).then(r => r.ok ? r.json() : []).then(data => {
+        if (Array.isArray(data)) setNotifs(data)
+      }).catch(() => {})
+    }
+
+    fetchNotifs()
+    const interval = setInterval(fetchNotifs, 30000)
+    return () => clearInterval(interval)
   }, [user])
 
   useEffect(() => {
@@ -100,7 +107,7 @@ export default function Navbar() {
           {user ? (
             <>
             <div className={styles.notifWrap} ref={notifRef}>
-              <button className={styles.notifBtn} onClick={() => { setNotifOpen(o => !o); setNotifSeen(notifs.length) }} aria-label="Notifications">
+              <button className={styles.notifBtn} onClick={() => { setNotifOpen(o => { if (!o) setNotifSeen(notifs.length); return !o }) }} aria-label="Notifications">
                 🔔
                 {notifs.length > notifSeen && (
                   <span className={styles.notifBadge}>{notifs.length - notifSeen}</span>

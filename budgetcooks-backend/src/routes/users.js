@@ -82,7 +82,7 @@ router.get('/me/notifications', authenticate, async (req, res) => {
 router.get('/', authenticate, authorizeAdmin, async (req, res) => {
   try {
     const [rows] = await db.query(
-      'SELECT id, username, email, role, created_at FROM users ORDER BY created_at DESC'
+      'SELECT id, username, email, role, created_at FROM users WHERE is_deleted = 0 OR is_deleted IS NULL ORDER BY created_at DESC'
     );
     res.json(rows);
   } catch (err) { res.status(500).json({ error: err.message }); }
