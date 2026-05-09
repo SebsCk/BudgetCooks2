@@ -51,7 +51,7 @@ router.get('/me/notifications', authenticate, async (req, res) => {
   try {
     const [likes] = await db.query(`
       SELECT 'like' AS type, u.username AS actor, r.title AS recipe_title,
-             r.id AS recipe_id, l.created_at
+             r.id AS recipe_id, NULL AS comment_id, NULL AS preview, l.created_at
       FROM likes l
       JOIN users u ON u.id = l.user_id
       JOIN recipes r ON r.id = l.recipe_id
@@ -61,7 +61,7 @@ router.get('/me/notifications', authenticate, async (req, res) => {
 
     const [comments] = await db.query(`
       SELECT 'comment' AS type, u.username AS actor, r.title AS recipe_title,
-             r.id AS recipe_id, c.body AS preview, c.created_at
+             r.id AS recipe_id, c.id AS comment_id, c.body AS preview, c.created_at
       FROM comments c
       JOIN users u ON u.id = c.user_id
       JOIN recipes r ON r.id = c.recipe_id

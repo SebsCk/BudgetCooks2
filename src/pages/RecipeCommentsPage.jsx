@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react'
-import { useParams, Link } from 'react-router-dom'
+import { useState, useEffect, useRef } from 'react'
+import { useParams, useSearchParams, Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import styles from './RecipeCommentsPage.module.css'
 
@@ -13,10 +13,23 @@ function timeAgo(ts) {
   return new Date(ts).toLocaleDateString()
 }
 
-function CommentNode({ comment, token, currentUser, recipeId, onReply, onDelete, depth = 0 }) {
+function CommentNode({ comment, token, currentUser, recipeId, onReply, onDelete, depth = 0, highlightId }) {
   const [showReply, setShowReply] = useState(false)
   const [replyText, setReplyText] = useState('')
   const [submitting, setSubmitting] = useState(false)
+  const [flash, setFlash] = useState(false)
+  const nodeRef = useRef(null)
+
+  const isHighlighted = String(comment.id) === String(highlightId)
+
+  useEffect(() => {
+    if (isHighlighted && nodeRef.current) {
+      nodeRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      setFlash(true)
+      const t = setTimeout(() => setFlash(false), 2500)
+      return () => clearTimeout(t)
+    }
+  }, [isHighlighted])
 
   const submitReply = async () => {
     if (!replyText.trim()) return
@@ -41,7 +54,10 @@ function CommentNode({ comment, token, currentUser, recipeId, onReply, onDelete,
   }
 
   return (
-    <div className={`${styles.commentNode} ${depth > 0 ? styles.nested : ''}`}>
+    <div
+      ref={nodeRef}
+      className={`${styles.commentNode} ${depth > 0 ? styles.nested : ''} ${flash ? styles.highlighted : ''}`}
+    >
       <div className={styles.avatar} style={{ width: depth > 0 ? 28 : 36, height: depth > 0 ? 28 : 36 }}>
         {(comment.author || '?').slice(0, 2).toUpperCase()}
       </div>
@@ -86,7 +102,8 @@ function CommentNode({ comment, token, currentUser, recipeId, onReply, onDelete,
 
         {comment.replies?.map(r => (
           <CommentNode key={r.id} comment={r} token={token} currentUser={currentUser}
-            recipeId={recipeId} onReply={onReply} onDelete={onDelete} depth={depth + 1} />
+            recipeId={recipeId} onReply={onReply} onDelete={onDelete} depth={depth + 1}
+            highlightId={highlightId} />
         ))}
       </div>
     </div>
@@ -95,7 +112,9 @@ function CommentNode({ comment, token, currentUser, recipeId, onReply, onDelete,
 
 export default function RecipeCommentsPage() {
   const { id } = useParams()
-  const { user } = useAuth()          // ← use AuthContext, not manual JWT decode
+  const [searchParams] = useSearchParams()
+  const highlightId = searchParams.get('comment')
+  const { user } = useAuth()
   const token = localStorage.getItem('token')
 
   const [recipe,     setRecipe]     = useState(null)
@@ -152,7 +171,6 @@ export default function RecipeCommentsPage() {
         headers: { Authorization: `Bearer ${token}` }
       })
       if (res.ok) {
-        // remove from top-level or from replies
         setComments(cs => cs
           .filter(c => c.id !== commentId)
           .map(c => ({ ...c, replies: (c.replies || []).filter(r => r.id !== commentId) }))
@@ -213,7 +231,8 @@ export default function RecipeCommentsPage() {
           : <div className={styles.commentList}>
               {comments.map(c => (
                 <CommentNode key={c.id} comment={c} token={token} currentUser={user}
-                  recipeId={id} onReply={handleReply} onDelete={deleteComment} depth={0} />
+                  recipeId={id} onReply={handleReply} onDelete={deleteComment} depth={0}
+                  highlightId={highlightId} />
               ))}
             </div>
         }

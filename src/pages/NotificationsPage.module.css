@@ -37,3 +37,13 @@
 .emptyIcon { font-size: 3rem; display: block; margin-bottom: 1rem; }
 .emptyHint { font-size: 0.85rem; margin-top: 0.25rem; }
 .empty { color: var(--warm-gray); font-size: 0.9rem; }
+.preview {
+  font-size: 0.82rem;
+  color: var(--warm-gray);
+  margin: 0.2rem 0 0.15rem;
+  font-style: italic;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 480px;
+}

@@ -20,8 +20,8 @@ export default function NotificationsPage() {
   const token     = localStorage.getItem('token')
   const seenAt    = parseInt(localStorage.getItem('notifSeenAt') || '0', 10)
 
-  const [notifs,   setNotifs]   = useState([])
-  const [loading,  setLoading]  = useState(true)
+  const [notifs,  setNotifs]  = useState([])
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     if (!user) { navigate('/login'); return }
@@ -38,6 +38,13 @@ export default function NotificationsPage() {
     localStorage.setItem('notifSeenAt', now)
   }, [user])
 
+  const handleClick = (n) => {
+    const dest = n.comment_id
+      ? `/recipe/${n.recipe_id}/comments?comment=${n.comment_id}`
+      : `/recipe/${n.recipe_id}/comments`
+    navigate(dest)
+  }
+
   return (
     <div className={styles.page}>
       <div className={styles.inner}>
@@ -48,9 +55,7 @@ export default function NotificationsPage() {
         </div>
 
         <div className={styles.list}>
-          {loading && (
-            <p className={styles.empty}>Loading…</p>
-          )}
+          {loading && <p className={styles.empty}>Loading…</p>}
 
           {!loading && notifs.length === 0 && (
             <div className={styles.emptyState}>
@@ -66,7 +71,7 @@ export default function NotificationsPage() {
               <div
                 key={i}
                 className={`${styles.item} ${isUnread ? styles.unread : ''}`}
-                onClick={() => navigate(`/recipe/${n.recipe_id}/comments`)}
+                onClick={() => handleClick(n)}
               >
                 <div className={styles.iconWrap}>
                   {n.type === 'like' ? '❤️' : '💬'}
@@ -77,6 +82,9 @@ export default function NotificationsPage() {
                     {n.type === 'like' ? 'liked' : 'commented on'}{' '}
                     <em>{n.recipe_title}</em>
                   </p>
+                  {n.type === 'comment' && n.preview && (
+                    <p className={styles.preview}>"{n.preview}"</p>
+                  )}
                   <span className={styles.itemTime}>{timeAgo(n.created_at)}</span>
                 </div>
                 {isUnread && <span className={styles.dot} />}
