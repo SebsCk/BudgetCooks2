@@ -31,3 +31,42 @@
 .formRow { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
 .formError { color: var(--terra); font-size: 0.85rem; padding: 0.5rem; background: var(--red-soft); border-radius: 6px; }
 .modalActions { display: flex; gap: 0.75rem; justify-content: flex-end; margin-top: 0.5rem; }
+
+/* ── Entries panel ── */
+.entriesBtn {
+  background: none; border: none; cursor: pointer;
+  font-size: 0.85rem; color: var(--olive); font-weight: 600;
+  padding: 0; display: flex; align-items: center; gap: 0.2rem;
+}
+.entriesBtn:disabled { cursor: default; opacity: 0.6; }
+.entriesBtn:not(:disabled):hover { text-decoration: underline; }
+.entriesChevron { font-size: 0.7rem; }
+
+.entriesPanel {
+  margin-top: 1rem;
+  border-top: 1.5px solid var(--cream2);
+  padding-top: 0.85rem;
+}
+.entriesLoading, .entriesEmpty {
+  font-size: 0.85rem; color: var(--warm-gray); margin: 0;
+}
+.entriesList { display: flex; flex-direction: column; gap: 0.5rem; }
+
+.entryRow {
+  display: flex; align-items: center; gap: 0.75rem;
+  padding: 0.6rem 0.75rem; border-radius: 8px;
+  border: 1.5px solid var(--cream2); cursor: pointer;
+  background: #fff; transition: border-color 0.15s, box-shadow 0.15s;
+}
+.entryRow:hover { border-color: var(--terra); box-shadow: 0 2px 6px rgba(0,0,0,0.07); }
+
+.entryImg { width: 44px; height: 44px; object-fit: cover; border-radius: 6px; flex-shrink: 0; }
+.entryImgPlaceholder {
+  width: 44px; height: 44px; border-radius: 6px; flex-shrink: 0;
+  background: var(--cream2); display: flex; align-items: center;
+  justify-content: center; font-size: 1.3rem;
+}
+.entryInfo { flex: 1; display: flex; flex-direction: column; gap: 0.15rem; }
+.entryTitle { font-size: 0.88rem; font-weight: 700; color: var(--charcoal); }
+.entryMeta { font-size: 0.75rem; color: var(--warm-gray); }
+.entryArrow { font-size: 0.9rem; color: var(--terra); flex-shrink: 0; }

@@ -1,15 +1,20 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '../context/AuthContext'
+import { useNavigate } from 'react-router-dom'
 import styles from './ChallengesPage.module.css'
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:4000'
 
 function ChallengeCard({ ch, token, user, isAdmin, onRefresh }) {
-  const [busy,      setBusy]      = useState(false)
-  const [showPick,  setShowPick]  = useState(false)
-  const [recipes,   setRecipes]   = useState([])
-  const [loadingR,  setLoadingR]  = useState(false)
-  const [pickedId,  setPickedId]  = useState('')
+  const [busy,         setBusy]         = useState(false)
+  const [showPick,     setShowPick]     = useState(false)
+  const [recipes,      setRecipes]      = useState([])
+  const [loadingR,     setLoadingR]     = useState(false)
+  const [pickedId,     setPickedId]     = useState('')
+  const [showEntries,  setShowEntries]  = useState(false)
+  const [entries,      setEntries]      = useState([])
+  const [loadingE,     setLoadingE]     = useState(false)
+  const navigate = useNavigate()
 
   const changeStatus = async (status) => {
     setBusy(true)
@@ -58,6 +63,21 @@ function ChallengeCard({ ch, token, user, isAdmin, onRefresh }) {
     finally { setBusy(false) }
   }
 
+  const toggleEntries = async () => {
+    if (showEntries) { setShowEntries(false); return }
+    setShowEntries(true)
+    if (entries.length > 0) return   // already loaded
+    setLoadingE(true)
+    try {
+      const res = await fetch(`${API}/api/challenges/${ch.id}`)
+      if (res.ok) {
+        const data = await res.json()
+        setEntries(data.entries || [])
+      }
+    } catch {}
+    setLoadingE(false)
+  }
+
   return (
     <>
       <div className={`${styles.card} ${ch.status === 'active' ? styles.cardLive : ''}`}>
@@ -72,7 +92,14 @@ function ChallengeCard({ ch, token, user, isAdmin, onRefresh }) {
           <h3 className={styles.cardTitle}>{ch.title}</h3>
           <p className={styles.cardDesc}>{ch.description || 'Share your best budget recipe!'}</p>
           <div className={styles.cardFooter}>
-            <span className={styles.entries}>👥 {ch.entry_count || 0} entries</span>
+            <button
+              className={styles.entriesBtn}
+              onClick={toggleEntries}
+              disabled={ch.entry_count === 0}
+            >
+              👥 {ch.entry_count || 0} {ch.entry_count === 1 ? 'entry' : 'entries'}
+              {ch.entry_count > 0 && <span className={styles.entriesChevron}>{showEntries ? ' ▲' : ' ▼'}</span>}
+            </button>
             <div style={{display:'flex',gap:'0.5rem',flexWrap:'wrap'}}>
               {ch.status==='active' && !isAdmin && (
                 <button className="btn btn-primary" style={{fontSize:'0.82rem',padding:'0.5rem 1rem'}}
@@ -92,6 +119,39 @@ function ChallengeCard({ ch, token, user, isAdmin, onRefresh }) {
               )}
             </div>
           </div>
+
+          {/* Entries panel */}
+          {showEntries && (
+            <div className={styles.entriesPanel}>
+              {loadingE ? (
+                <p className={styles.entriesLoading}>Loading entries…</p>
+              ) : entries.length === 0 ? (
+                <p className={styles.entriesEmpty}>No entries yet.</p>
+              ) : (
+                <div className={styles.entriesList}>
+                  {entries.map((e, i) => (
+                    <div
+                      key={i}
+                      className={styles.entryRow}
+                      onClick={() => navigate(`/recipe/${e.recipe_id}/comments`)}
+                    >
+                      {e.image_url
+                        ? <img src={e.image_url} alt={e.title} className={styles.entryImg} />
+                        : <div className={styles.entryImgPlaceholder}>🍽</div>
+                      }
+                      <div className={styles.entryInfo}>
+                        <span className={styles.entryTitle}>{e.title}</span>
+                        <span className={styles.entryMeta}>
+                          by <strong>{e.author}</strong> · ₱{e.estimated_cost || '—'}
+                        </span>
+                      </div>
+                      <span className={styles.entryArrow}>→</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
