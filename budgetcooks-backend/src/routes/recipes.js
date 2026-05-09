@@ -6,7 +6,7 @@ const router = express.Router();
 
 // GET /api/recipes — feed with infinite scroll
 router.get('/', async (req, res) => {
-  const { sort = 'hot', category, q, limit = 10, offset = 0 } = req.query;
+  const { sort = 'hot', category, q, limit = 10, offset = 0, mine } = req.query;
 
   // optionally decode user from Authorization header (no hard auth required)
   let userId = null;
@@ -19,7 +19,7 @@ router.get('/', async (req, res) => {
   } catch {}
 
   const orderMap = {
-    hot:       'r.created_at DESC',
+    hot:       '(like_count + comment_count * 2) DESC',
     new:       'r.created_at DESC',
     top:       'like_count DESC',
   };
@@ -30,9 +30,14 @@ router.get('/', async (req, res) => {
 
   if (category) { where += ' AND c.slug = ?'; params.push(category); }
   if (q)        { where += ' AND r.title LIKE ?'; params.push(`%${q}%`); }
+  if (mine && userId) { where += ' AND r.user_id = ?'; params.push(userId); }
 
-  const userBookmarkedCol = `0 AS user_bookmarked,`;
-  const userBookmarkedJoin = '';
+  const userBookmarkedCol = userId
+    ? `MAX(CASE WHEN bm.user_id = ${parseInt(userId)} THEN 1 ELSE 0 END) AS user_bookmarked,`
+    : `0 AS user_bookmarked,`;
+  const userBookmarkedJoin = userId
+    ? `LEFT JOIN bookmarks bm ON bm.recipe_id = r.id AND bm.user_id = ${parseInt(userId)}`
+    : '';
 
   const userLikedCol = userId
     ? `MAX(CASE WHEN ul.user_id = ${parseInt(userId)} THEN 1 ELSE 0 END) AS user_liked,`
