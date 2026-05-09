@@ -193,3 +193,5 @@
 .notifItem:last-child { border-bottom: none; }
 .notifIcon { font-size: 1rem; flex-shrink: 0; margin-top: 2px; }
 .notifText { font-size: 0.83rem; color: var(--forest); line-height: 1.4; }
+.notifViewAll { display: block; text-align: center; padding: 0.7rem 1rem; font-size: 0.82rem; font-weight: 600; color: var(--terra); text-decoration: none; border-top: 1px solid var(--cream2); background: var(--cream); border-radius: 0 0 10px 10px; }
+.notifViewAll:hover { background: var(--cream2); }

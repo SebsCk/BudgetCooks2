@@ -14,6 +14,7 @@ import AboutPage           from './pages/AboutPage'
 import ForumPage from './pages/ForumPage'
 import ShareRecipePage     from './pages/ShareRecipePage'
 import RecipeCommentsPage  from './pages/RecipeCommentsPage'
+import NotificationsPage   from './pages/NotificationsPage'
 import ProfilePage          from './pages/ProfilePage'
 import ErrorBoundary from './components/ErrorBoundary'
 import './index.css'
@@ -38,6 +39,7 @@ export default function App() {
           <Route path="/shopping-list" element={<ShoppingList />}    />
           <Route path="/meal-planner"  element={<MealPlanner />}     />
           <Route path="/recipe/:id/comments" element={<RecipeCommentsPage />} />
+          <Route path="/notifications"        element={<NotificationsPage />}  />
           <Route path="/profile/:username"      element={<ProfilePage />} />
         </Routes>
         </ErrorBoundary>

@@ -36,7 +36,7 @@ export default function Navbar() {
 
   useEffect(() => {
     if (!location.search.includes('search=')) setSearchQuery('')
-  }, [location]  )
+  }, [location])
 
   useEffect(() => {
     if (!user) return
@@ -131,17 +131,27 @@ export default function Navbar() {
               {notifOpen && (
                 <div className={styles.notifDropdown}>
                   <div className={styles.notifHeader}>Notifications</div>
-                  {notifs.length === 0
-                    ? <p className={styles.notifEmpty}>No notifications yet</p>
-                    : notifs.slice(0, 10).map((n, i) => (
-                      <div key={i} className={styles.notifItem} onClick={() => { navigate(`/recipe/${n.recipe_id}/comments`); setNotifOpen(false) }}>
-                        <span className={styles.notifIcon}>{n.type === 'like' ? '❤️' : '💬'}</span>
-                        <span className={styles.notifText}>
-                          <strong>{n.actor}</strong> {n.type === 'like' ? 'liked' : 'commented on'} <em>{n.recipe_title}</em>
-                        </span>
-                      </div>
-                    ))
-                  }
+                  {notifs.length === 0 ? (
+                    <p className={styles.notifEmpty}>No notifications yet</p>
+                  ) : (
+                    <>
+                      {notifs.slice(0, 5).map((n, i) => (
+                        <div key={i} className={styles.notifItem} onClick={() => { navigate(`/recipe/${n.recipe_id}/comments`); setNotifOpen(false) }}>
+                          <span className={styles.notifIcon}>{n.type === 'like' ? '❤️' : '💬'}</span>
+                          <span className={styles.notifText}>
+                            <strong>{n.actor}</strong> {n.type === 'like' ? 'liked' : 'commented on'} <em>{n.recipe_title}</em>
+                          </span>
+                        </div>
+                      ))}
+                      <Link
+                        to="/notifications"
+                        className={styles.notifViewAll}
+                        onClick={() => setNotifOpen(false)}
+                      >
+                        View all {notifs.length} notifications →
+                      </Link>
+                    </>
+                  )}
                 </div>
               )}
             </div>
