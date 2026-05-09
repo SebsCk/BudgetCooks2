@@ -134,7 +134,7 @@ export default function Navbar() {
                   {notifs.length === 0
                     ? <p className={styles.notifEmpty}>No notifications yet</p>
                     : notifs.slice(0, 10).map((n, i) => (
-                      <div key={i} className={styles.notifItem} onClick={() => { navigate(`/feed?recipe=${n.recipe_id}`); setNotifOpen(false) }}>
+                      <div key={i} className={styles.notifItem} onClick={() => { navigate(`/recipe/${n.recipe_id}/comments`); setNotifOpen(false) }}>
                         <span className={styles.notifIcon}>{n.type === 'like' ? '❤️' : '💬'}</span>
                         <span className={styles.notifText}>
                           <strong>{n.actor}</strong> {n.type === 'like' ? 'liked' : 'commented on'} <em>{n.recipe_title}</em>
