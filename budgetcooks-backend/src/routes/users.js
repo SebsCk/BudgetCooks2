@@ -170,6 +170,20 @@ router.delete('/:id', authenticate, authorizeAdmin, async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
+// PATCH /api/users/me/avatar — update own avatar
+router.patch('/me/avatar', authenticate, async (req, res) => {
+  const { avatar_url } = req.body;
+  if (!avatar_url) return res.status(400).json({ error: 'avatar_url required' });
+  // Accept base64 data URLs or plain URLs, max ~2MB
+  if (avatar_url.length > 2 * 1024 * 1024 * 1.37) {
+    return res.status(400).json({ error: 'Image too large (max 2 MB)' });
+  }
+  try {
+    await db.query('UPDATE users SET avatar_url = ? WHERE id = ?', [avatar_url, req.user.id]);
+    res.json({ avatar_url });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
 // ── PUBLIC PROFILE (wildcard — keep LAST) ─────────────────────────────────
 
 // GET /api/users/me/bookmarks

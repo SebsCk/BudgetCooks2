@@ -46,6 +46,34 @@ export default function ProfilePage() {
   const [bookmarks, setBookmarks] = useState([])
 
   const isMe = user?.username === username
+  const [avatarUploading, setAvatarUploading] = useState(false)
+  const [avatarError,     setAvatarError]     = useState('')
+
+  const handleAvatarUpload = async (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    if (file.size > 2 * 1024 * 1024) { setAvatarError('Image must be under 2 MB'); return }
+    setAvatarUploading(true); setAvatarError('')
+    try {
+      const reader = new FileReader()
+      reader.onload = async (ev) => {
+        const base64 = ev.target.result
+        const res = await fetch(`${API}/api/users/me/avatar`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          body: JSON.stringify({ avatar_url: base64 }),
+        })
+        if (res.ok) {
+          const data = await res.json()
+          setProfile(p => ({ ...p, user: { ...p.user, avatar_url: data.avatar_url } }))
+        } else {
+          setAvatarError('Failed to update photo.')
+        }
+        setAvatarUploading(false)
+      }
+      reader.readAsDataURL(file)
+    } catch { setAvatarError('Network error.'); setAvatarUploading(false) }
+  }
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [deletePassword,    setDeletePassword]    = useState('')
   const [deleteError,       setDeleteError]       = useState('')
@@ -86,7 +114,7 @@ export default function ProfilePage() {
 
   const TABS = [
     { id: 'recipes',    label: `🍳 Recipes (${profile.recipes?.length || 0})` },
-    ...(isMe ? [{ id: 'liked', label: `❤️ Liked (${profile.liked?.length || 0})` }] : []),
+    { id: 'liked',      label: `❤️ Liked (${profile.liked?.length || 0})` },
     { id: 'challenges', label: `🏆 Challenges (${profile.challenges?.length || 0})` },
     ...(isMe ? [{ id: 'saved', label: `🔖 Saved (${bookmarks.length})` }] : []),
   ]
@@ -115,7 +143,19 @@ export default function ProfilePage() {
     <div className={styles.page}>
       {/* Hero */}
       <div className={styles.hero}>
-        <div className={styles.avatar}>{username.slice(0, 2).toUpperCase()}</div>
+        <div className={styles.avatarWrap}>
+          {profile.user?.avatar_url
+            ? <img src={profile.user.avatar_url} alt={username} className={styles.avatarImg} />
+            : <div className={styles.avatar}>{username.slice(0, 2).toUpperCase()}</div>
+          }
+          {isMe && (
+            <label className={styles.avatarOverlay} title="Change photo">
+              {avatarUploading ? '⏳' : '📷'}
+              <input type="file" accept="image/*" style={{display:'none'}} onChange={handleAvatarUpload} />
+            </label>
+          )}
+          {avatarError && <p className={styles.avatarError}>{avatarError}</p>}
+        </div>
         <div className={styles.heroInfo}>
           <h1 className={styles.username}>{username}</h1>
           <p className={styles.joined}>Joined {new Date(profile.user?.created_at).toLocaleDateString()}</p>
@@ -125,16 +165,12 @@ export default function ProfilePage() {
             <div className={styles.stat}><strong>{profile.liked?.length || 0}</strong><span>Liked</span></div>
           </div>
         </div>
-        <div className={styles.heroActions}>
-          {isMe ? (
-            <>
-              <button className={styles.editBtn} onClick={() => navigate('/share')}>+ Add Recipe</button>
-              <button className={styles.dangerBtn} onClick={() => setShowDeleteConfirm(true)}>Delete Account</button>
-            </>
-          ) : (
-            <button className={styles.editBtn} onClick={() => navigate('/feed')}>Browse Recipes</button>
-          )}
-        </div>
+        {isMe && (
+          <div className={styles.heroActions}>
+            <button className={styles.editBtn} onClick={() => navigate('/share')}>+ Add Recipe</button>
+            <button className={styles.dangerBtn} onClick={() => setShowDeleteConfirm(true)}>Delete Account</button>
+          </div>
+        )}
       </div>
 
       {/* Tabs */}

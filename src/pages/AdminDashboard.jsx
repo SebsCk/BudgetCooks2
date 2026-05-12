@@ -358,9 +358,10 @@ export default function AdminDashboard() {
                       <tr key={f.id}>
                         <td style={{fontWeight:600,maxWidth:'220px'}}>{f.title}</td>
                         <td>
-                          <span className={`${styles.rolePill} ${f.author_role==='admin'?styles.roleAdmin:''}`}>
-                            {f.author}
-                          </span>
+                          {f.author && f.author !== 'Anonymous'
+                            ? <Link to={`/profile/${f.author}`} className={`${styles.rolePill} ${f.author_role==='admin'?styles.roleAdmin:''}`} style={{textDecoration:'none'}}>{f.author}</Link>
+                            : <span className={`${styles.rolePill} ${f.author_role==='admin'?styles.roleAdmin:''}`}>{f.author}</span>
+                          }
                         </td>
                         <td>{f.category}</td>
                         <td>💬 {f.reply_count}</td>
@@ -466,9 +467,16 @@ export default function AdminDashboard() {
                     {favorites.map((f, i) => (
                       <tr key={f.id}>
                         <td style={{fontWeight:700,color:'var(--terra)'}}>{i + 1}</td>
-                        <td style={{fontWeight:600}}>{f.pinned ? '📌 ' : ''}{f.title}</td>
+                        <td style={{fontWeight:600}}>
+                          <Link to={`/feed?recipe=${f.id}`} className={styles.recipeLink}>
+                            {f.pinned ? '📌 ' : ''}{f.title}
+                          </Link>
+                        </td>
                         <td>
-                          <span className={styles.rolePill}>{f.author}</span>
+                          {f.author && f.author !== 'Anonymous'
+                            ? <Link to={`/profile/${f.author}`} className={styles.rolePill} style={{textDecoration:'none'}}>{f.author}</Link>
+                            : <span className={styles.rolePill}>{f.author}</span>
+                          }
                         </td>
                         <td>
                           <span style={{fontWeight:700,color:'#c0392b'}}>❤️ {f.like_count}</span>
