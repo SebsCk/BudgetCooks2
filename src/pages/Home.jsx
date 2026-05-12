@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect, useRef } from 'react'
-import { useLocation, useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate, Link } from 'react-router-dom'
 import styles from './Home.module.css'
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:4000'
@@ -118,11 +118,11 @@ function RecipeCard({ recipe, onLike, liked, onBookmark, bookmarked, token }) {
   return (
     <article className={styles.recipeCard}>
       {recipe.image_url ? (
-        <div className={styles.recipeImgPhoto}>
+        <div className={styles.recipeImgPhoto} onClick={openDetail} style={{cursor:'pointer'}}>
           <img src={recipe.image_url} alt={recipe.title} className={styles.recipePhoto} />
         </div>
       ) : (
-        <div className={styles.recipeImg} style={{ background: recipe.id % 2 === 0 ? 'var(--cream)' : 'var(--cream2)' }}>
+        <div className={styles.recipeImg} onClick={openDetail} style={{ background: recipe.id % 2 === 0 ? 'var(--cream)' : 'var(--cream2)', cursor:'pointer' }}>
           <span>{recipe.emoji || '🍽'}</span>
         </div>
       )}
@@ -130,7 +130,7 @@ function RecipeCard({ recipe, onLike, liked, onBookmark, bookmarked, token }) {
         <div className={styles.recipeTags}>
           {recipe.category && <span className="tag">{recipe.category}</span>}
         </div>
-        <h3 className={styles.recipeTitle}>{recipe.title}</h3>
+        <h3 className={styles.recipeTitle} onClick={openDetail} style={{cursor:'pointer'}}>{recipe.title}</h3>
         <p className={styles.recipeMeta}>
           <span>⏱ {totalMins ? `${totalMins} mins` : '—'}</span>
           <span className={styles.dot}>·</span>
@@ -161,10 +161,19 @@ function RecipeCard({ recipe, onLike, liked, onBookmark, bookmarked, token }) {
             )}
           </div>
           <div className={styles.recipeAuthor}>
-            <span className={styles.avatar} style={{ background: '#C1502A' }}>
-              {(recipe.author || recipe.username || '?').slice(0,2).toUpperCase()}
-            </span>
-            {recipe.author || recipe.username}
+            {(recipe.author || recipe.username) && (recipe.author || recipe.username) !== 'Anonymous' ? (
+              <Link to={`/profile/${recipe.author || recipe.username}`} className={styles.authorLink}>
+                <span className={styles.avatar} style={{ background: '#C1502A' }}>
+                  {(recipe.author || recipe.username).slice(0,2).toUpperCase()}
+                </span>
+                {recipe.author || recipe.username}
+              </Link>
+            ) : (
+              <>
+                <span className={styles.avatar} style={{ background: '#C1502A' }}>?</span>
+                Anonymous
+              </>
+            )}
           </div>
         </div>
 
@@ -496,13 +505,15 @@ export default function Home() {
                 : topCooks.map((cook, i) => (
                   <div key={cook.id || i} className={styles.cookItem}>
                     <span className={`${styles.cookRank} ${i < 3 ? styles.topRank : ''}`}>{i + 1}</span>
-                    <div className={styles.cookAv} style={{ background: cook.color || '#C1502A' }}>
-                      {(cook.username || cook.name || '?').slice(0,2).toUpperCase()}
-                    </div>
-                    <div>
-                      <div className={styles.cookName}>{cook.username || cook.name}</div>
-                      <div className={styles.cookRecipes}>{cook.recipe_count || 0} recipes</div>
-                    </div>
+                    <Link to={`/profile/${cook.username || cook.name}`} className={styles.cookProfileLink}>
+                      <div className={styles.cookAv} style={{ background: cook.color || '#C1502A' }}>
+                        {(cook.username || cook.name || '?').slice(0,2).toUpperCase()}
+                      </div>
+                      <div>
+                        <div className={styles.cookName}>{cook.username || cook.name}</div>
+                        <div className={styles.cookRecipes}>{cook.recipe_count || 0} recipes</div>
+                      </div>
+                    </Link>
                     <span className={styles.cookLikes}>❤ {cook.total_likes || 0}</span>
                   </div>
                 ))}
