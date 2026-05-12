@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect, useCallback, useRef } from 'react'
-import { useNavigate, useLocation } from 'react-router-dom'
+import { useNavigate, useLocation, Link } from 'react-router-dom'
 import styles from './FeedPage.module.css'
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:4000'
@@ -182,10 +182,16 @@ function CommentThread({ comment, token, onReply, currentUser, recipeId, depth =
 
   return (
     <div className={styles.comment}>
-      <div className={styles.commentAvatar}>{(comment.author||'?').slice(0,2).toUpperCase()}</div>
+      {comment.author && comment.author !== 'Anonymous'
+        ? <Link to={`/profile/${comment.author}`} className={styles.commentAvatarLink}><div className={styles.commentAvatar}>{comment.author.slice(0,2).toUpperCase()}</div></Link>
+        : <div className={styles.commentAvatar}>{(comment.author||'?').slice(0,2).toUpperCase()}</div>
+      }
       <div className={styles.commentBody}>
         <div className={styles.commentMeta}>
-          <strong>{comment.author}</strong>
+          {comment.author && comment.author !== 'Anonymous'
+            ? <Link to={`/profile/${comment.author}`} className={styles.commentAuthorLink}><strong>{comment.author}</strong></Link>
+            : <strong>{comment.author}</strong>
+          }
           <span className={styles.commentTime}>{new Date(comment.created_at).toLocaleDateString()}</span>
         </div>
         <p className={styles.commentText}>{comment.body}</p>
@@ -354,8 +360,17 @@ function RecipeCard({ recipe, liked, onLike, bookmarked, onBookmark, currentUser
             </>)}
           </div>
           <div className={styles.author}>
-            <span className={styles.avatar}>{(recipe.author || '?').slice(0,2).toUpperCase()}</span>
-            {recipe.author || 'Anonymous'}
+            {recipe.author && recipe.author !== 'Anonymous' ? (
+              <Link to={`/profile/${recipe.author}`} className={styles.authorLink} onClick={e => e.stopPropagation()}>
+                <span className={styles.avatar}>{recipe.author.slice(0,2).toUpperCase()}</span>
+                {recipe.author}
+              </Link>
+            ) : (
+              <>
+                <span className={styles.avatar}>{'?'}</span>
+                Anonymous
+              </>
+            )}
           </div>
         </div>
 

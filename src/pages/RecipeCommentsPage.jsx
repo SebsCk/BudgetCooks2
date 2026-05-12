@@ -63,7 +63,10 @@ function CommentNode({ comment, token, currentUser, recipeId, onReply, onDelete,
       </div>
       <div className={styles.commentContent}>
         <div className={styles.commentHeader}>
-          <strong>{comment.author}</strong>
+          {comment.author && comment.author !== 'Anonymous'
+              ? <Link to={`/profile/${comment.author}`} className={styles.authorLink}><strong>{comment.author}</strong></Link>
+              : <strong>{comment.author || 'Anonymous'}</strong>
+            }
           <span className={styles.time}>{timeAgo(comment.created_at)}</span>
         </div>
         <p className={styles.commentBody}>{comment.body}</p>
@@ -216,8 +219,17 @@ export default function RecipeCommentsPage() {
               )}
             </div>
             <div className={styles.recipeAuthor}>
-              <div className={styles.authorAvatar}>{(recipe.author || '?').slice(0, 2).toUpperCase()}</div>
-              <span>{recipe.author || 'Anonymous'}</span>
+              {recipe.author && recipe.author !== 'Anonymous' ? (
+                <Link to={`/profile/${recipe.author}`} className={styles.authorLink}>
+                  <div className={styles.authorAvatar}>{recipe.author.slice(0, 2).toUpperCase()}</div>
+                  <span>{recipe.author}</span>
+                </Link>
+              ) : (
+                <>
+                  <div className={styles.authorAvatar}>{'?'}</div>
+                  <span>Anonymous</span>
+                </>
+              )}
             </div>
           </div>
         </div>

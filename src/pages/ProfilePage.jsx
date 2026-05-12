@@ -86,7 +86,7 @@ export default function ProfilePage() {
 
   const TABS = [
     { id: 'recipes',    label: `🍳 Recipes (${profile.recipes?.length || 0})` },
-    { id: 'liked',      label: `❤️ Liked (${profile.liked?.length || 0})` },
+    ...(isMe ? [{ id: 'liked', label: `❤️ Liked (${profile.liked?.length || 0})` }] : []),
     { id: 'challenges', label: `🏆 Challenges (${profile.challenges?.length || 0})` },
     ...(isMe ? [{ id: 'saved', label: `🔖 Saved (${bookmarks.length})` }] : []),
   ]
@@ -125,12 +125,16 @@ export default function ProfilePage() {
             <div className={styles.stat}><strong>{profile.liked?.length || 0}</strong><span>Liked</span></div>
           </div>
         </div>
-        {isMe && (
-          <div className={styles.heroActions}>
-            <button className={styles.editBtn} onClick={() => navigate('/share')}>+ Add Recipe</button>
-            <button className={styles.dangerBtn} onClick={() => setShowDeleteConfirm(true)}>Delete Account</button>
-          </div>
-        )}
+        <div className={styles.heroActions}>
+          {isMe ? (
+            <>
+              <button className={styles.editBtn} onClick={() => navigate('/share')}>+ Add Recipe</button>
+              <button className={styles.dangerBtn} onClick={() => setShowDeleteConfirm(true)}>Delete Account</button>
+            </>
+          ) : (
+            <button className={styles.editBtn} onClick={() => navigate('/feed')}>Browse Recipes</button>
+          )}
+        </div>
       </div>
 
       {/* Tabs */}

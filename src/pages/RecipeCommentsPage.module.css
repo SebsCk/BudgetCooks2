@@ -72,3 +72,15 @@
 .highlighted {
   animation: commentFlash 2.5s ease forwards;
 }
+
+/* Clickable author links */
+.authorLink {
+  text-decoration: none;
+  color: inherit;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  transition: color 0.15s;
+}
+.authorLink:hover { color: var(--terra); }
+.authorLink strong { font-weight: 600; }
