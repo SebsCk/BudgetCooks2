@@ -21,16 +21,15 @@
 }
 .avatarOverlay {
   position: absolute; inset: 0; border-radius: 50%;
-  background: rgba(0,0,0,0.45); color: #fff;
+  background: rgba(0,0,0,0.5); color: #fff;
   display: flex; align-items: center; justify-content: center;
-  font-size: 1.2rem; cursor: pointer; opacity: 0;
+  font-size: 1.3rem; cursor: pointer; opacity: 0;
   transition: opacity 0.2s;
 }
 .avatarWrap:hover .avatarOverlay { opacity: 1; }
 .avatarError {
   position: absolute; top: 100%; left: 50%; transform: translateX(-50%);
-  white-space: nowrap; font-size: 0.72rem; color: #c0392b;
-  margin-top: 0.25rem;
+  white-space: nowrap; font-size: 0.72rem; color: #c0392b; margin-top: 0.3rem;
 }
 .heroInfo { flex: 1; }
 .username { font-size: 1.6rem; font-weight: 800; color: var(--forest); margin: 0 0 0.25rem; }
