@@ -84,6 +84,7 @@ function CommentSection({ recipeId, token }) {
 }
 
 function RecipeCard({ recipe, onLike, liked, onBookmark, bookmarked, token }) {
+  const navigate        = useNavigate()
   const [expanded,      setExpanded]      = useState(false)
   const [detail,        setDetail]        = useState(null)
   const [loadingDetail, setLoadingDetail] = useState(false)
@@ -91,15 +92,7 @@ function RecipeCard({ recipe, onLike, liked, onBookmark, bookmarked, token }) {
   const [reportReason,  setReportReason]  = useState('')
   const [reportSent,    setReportSent]    = useState(false)
 
-  const openDetail = async () => {
-    if (detail) { setDetail(null); return }
-    setLoadingDetail(true)
-    try {
-      const res = await fetch(`${API}/api/recipes/${recipe.id}`)
-      if (res.ok) setDetail(await res.json())
-    } catch {}
-    finally { setLoadingDetail(false) }
-  }
+  const openDetail = () => navigate(`/recipe/${recipe.id}/comments`)
 
   const submitReport = async () => {
     if (!reportReason.trim() || !token) return
@@ -154,7 +147,7 @@ function RecipeCard({ recipe, onLike, liked, onBookmark, bookmarked, token }) {
               {bookmarked ? '🔖' : '📌'}
             </button>
             <button className={styles.actionBtn} onClick={openDetail} title="View steps & ingredients">
-              {loadingDetail ? '...' : detail ? '✕' : '📋'}
+              {'📋'}
             </button>
             {token && (
               <button className={styles.actionBtn} onClick={() => setReportOpen(v => !v)} title="Report">🚩</button>

@@ -63,10 +63,7 @@ function CommentNode({ comment, token, currentUser, recipeId, onReply, onDelete,
       </div>
       <div className={styles.commentContent}>
         <div className={styles.commentHeader}>
-          {comment.author && comment.author !== 'Anonymous'
-              ? <Link to={`/profile/${comment.author}`} className={styles.authorLink}><strong>{comment.author}</strong></Link>
-              : <strong>{comment.author || 'Anonymous'}</strong>
-            }
+          <strong>{comment.author}</strong>
           <span className={styles.time}>{timeAgo(comment.created_at)}</span>
         </div>
         <p className={styles.commentBody}>{comment.body}</p>
@@ -219,21 +216,36 @@ export default function RecipeCommentsPage() {
               )}
             </div>
             <div className={styles.recipeAuthor}>
-              {recipe.author && recipe.author !== 'Anonymous' ? (
-                <Link to={`/profile/${recipe.author}`} className={styles.authorLink}>
-                  <div className={styles.authorAvatar}>{recipe.author.slice(0, 2).toUpperCase()}</div>
-                  <span>{recipe.author}</span>
-                </Link>
-              ) : (
-                <>
-                  <div className={styles.authorAvatar}>{'?'}</div>
-                  <span>Anonymous</span>
-                </>
-              )}
+              <div className={styles.authorAvatar}>{(recipe.author || '?').slice(0, 2).toUpperCase()}</div>
+              <span>{recipe.author || 'Anonymous'}</span>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Ingredients + Steps */}
+      {(recipe.ingredients?.length > 0 || recipe.steps?.length > 0) && (
+        <div className={styles.detailWrap}>
+          {recipe.ingredients?.length > 0 && (
+            <div className={styles.detailSection}>
+              <h3 className={styles.detailHeading}>🛒 Ingredients</h3>
+              <ul className={styles.ingredientList}>
+                {recipe.ingredients.map((ing, i) => (
+                  <li key={i}>{ing.quantity} {ing.unit} {ing.name}{ing.notes ? ` — ${ing.notes}` : ''}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+          {recipe.steps?.length > 0 && (
+            <div className={styles.detailSection}>
+              <h3 className={styles.detailHeading}>👨‍🍳 Steps</h3>
+              <ol className={styles.stepList}>
+                {recipe.steps.map(s => <li key={s.step_number}>{s.instruction}</li>)}
+              </ol>
+            </div>
+          )}
+        </div>
+      )}
 
       <div className={styles.commentsWrap}>
         <h2 className={styles.commentsHeading}>💬 {totalCount} Comment{totalCount !== 1 ? 's' : ''}</h2>

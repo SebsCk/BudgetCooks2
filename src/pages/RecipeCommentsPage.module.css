@@ -73,14 +73,26 @@
   animation: commentFlash 2.5s ease forwards;
 }
 
-/* Clickable author links */
-.authorLink {
-  text-decoration: none;
-  color: inherit;
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  transition: color 0.15s;
+/* Ingredients + Steps */
+.detailWrap {
+  max-width: 680px; margin: 0 auto 1.5rem;
+  display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;
 }
-.authorLink:hover { color: var(--terra); }
-.authorLink strong { font-weight: 600; }
+@media (max-width: 600px) { .detailWrap { grid-template-columns: 1fr; } }
+.detailSection {
+  background: var(--white); border: 1px solid var(--cream2);
+  border-radius: 12px; padding: 1.25rem;
+}
+.detailHeading {
+  font-size: 0.95rem; font-weight: 700; color: var(--forest);
+  margin: 0 0 0.75rem;
+}
+.ingredientList {
+  margin: 0; padding-left: 1.2rem;
+  font-size: 0.88rem; line-height: 1.7; color: #444;
+}
+.stepList {
+  margin: 0; padding-left: 1.2rem;
+  font-size: 0.88rem; line-height: 1.7; color: #444;
+}
+.stepList li, .ingredientList li { margin-bottom: 0.25rem; }

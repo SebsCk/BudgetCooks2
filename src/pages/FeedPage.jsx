@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect, useCallback, useRef } from 'react'
-import { useNavigate, useLocation, Link } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import styles from './FeedPage.module.css'
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:4000'
@@ -182,16 +182,10 @@ function CommentThread({ comment, token, onReply, currentUser, recipeId, depth =
 
   return (
     <div className={styles.comment}>
-      {comment.author && comment.author !== 'Anonymous'
-        ? <Link to={`/profile/${comment.author}`} className={styles.commentAvatarLink}><div className={styles.commentAvatar}>{comment.author.slice(0,2).toUpperCase()}</div></Link>
-        : <div className={styles.commentAvatar}>{(comment.author||'?').slice(0,2).toUpperCase()}</div>
-      }
+      <div className={styles.commentAvatar}>{(comment.author||'?').slice(0,2).toUpperCase()}</div>
       <div className={styles.commentBody}>
         <div className={styles.commentMeta}>
-          {comment.author && comment.author !== 'Anonymous'
-            ? <Link to={`/profile/${comment.author}`} className={styles.commentAuthorLink}><strong>{comment.author}</strong></Link>
-            : <strong>{comment.author}</strong>
-          }
+          <strong>{comment.author}</strong>
           <span className={styles.commentTime}>{new Date(comment.created_at).toLocaleDateString()}</span>
         </div>
         <p className={styles.commentText}>{comment.body}</p>
@@ -245,15 +239,8 @@ function RecipeCard({ recipe, liked, onLike, bookmarked, onBookmark, currentUser
   const [reportReason,   setReportReason]   = useState('')
   const [reportSent,     setReportSent]     = useState(false)
 
-  const openDetail = async () => {
-    if (detail) { setDetail(null); return }
-    setLoadingDetail(true)
-    try {
-      const res = await fetch(`${API}/api/recipes/${recipe.id}`)
-      if (res.ok) setDetail(await res.json())
-    } catch {}
-    finally { setLoadingDetail(false) }
-  }
+  const navigate = useNavigate()
+  const openDetail = () => navigate(`/recipe/${recipe.id}/comments`)
 
   const submitReport = async () => {
     if (!reportReason.trim() || !token) return
@@ -360,17 +347,8 @@ function RecipeCard({ recipe, liked, onLike, bookmarked, onBookmark, currentUser
             </>)}
           </div>
           <div className={styles.author}>
-            {recipe.author && recipe.author !== 'Anonymous' ? (
-              <Link to={`/profile/${recipe.author}`} className={styles.authorLink} onClick={e => e.stopPropagation()}>
-                <span className={styles.avatar}>{recipe.author.slice(0,2).toUpperCase()}</span>
-                {recipe.author}
-              </Link>
-            ) : (
-              <>
-                <span className={styles.avatar}>{'?'}</span>
-                Anonymous
-              </>
-            )}
+            <span className={styles.avatar}>{(recipe.author || '?').slice(0,2).toUpperCase()}</span>
+            {recipe.author || 'Anonymous'}
           </div>
         </div>
 
