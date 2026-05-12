@@ -174,7 +174,7 @@ router.delete('/:id', authenticate, authorizeAdmin, async (req, res) => {
 router.patch('/me/avatar', authenticate, async (req, res) => {
   const { avatar_url } = req.body;
   if (!avatar_url) return res.status(400).json({ error: 'avatar_url required' });
-  if (avatar_url.length > 3 * 1024 * 1024) {
+  if (avatar_url.length > 4 * 1024 * 1024) {
     return res.status(400).json({ error: 'Image too large (max 2 MB)' });
   }
   try {
