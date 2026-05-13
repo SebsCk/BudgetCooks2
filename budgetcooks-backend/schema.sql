@@ -18,7 +18,7 @@ CREATE TABLE users (
   email         VARCHAR(255)    NOT NULL,
   password_hash VARCHAR(255)    NOT NULL,
   role          ENUM('member','admin') NOT NULL DEFAULT 'member',
-  avatar_url    VARCHAR(500)    DEFAULT NULL,
+  avatar_url    LONGTEXT        DEFAULT NULL,
   created_at    TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
   PRIMARY KEY (id),
