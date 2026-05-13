@@ -59,7 +59,7 @@ const sql = `
            ${userLikedCol}
            ${userBookmarkedCol}
            r.pinned,
-           ce.challenge_id
+           MAX(ce.challenge_id) AS challenge_id
     FROM recipes r
     LEFT JOIN users u    ON u.id = r.user_id
     LEFT JOIN categories c ON c.id = r.category_id
