@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect, useCallback, useRef } from 'react'
-import { useNavigate, useLocation } from 'react-router-dom'
+import { useNavigate, useLocation, Link } from 'react-router-dom'
 import styles from './FeedPage.module.css'
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:4000'
@@ -298,12 +298,12 @@ function RecipeCard({ recipe, liked, onLike, bookmarked, onBookmark, currentUser
   return (
     <article className={styles.card}>
       {recipe.image_url && (
-        <div className={styles.cardImgPhoto}>
+        <div className={styles.cardImgPhoto} onClick={openDetail} style={{cursor:'pointer'}}>
           <img src={recipe.image_url} alt={recipe.title} className={styles.recipePhoto} />
         </div>
       )}
       {!recipe.image_url && (
-        <div className={styles.cardImg}>
+        <div className={styles.cardImg} onClick={openDetail} style={{cursor:'pointer'}}>
           <span>{recipe.emoji || '🍽'}</span>
         </div>
       )}
@@ -311,7 +311,7 @@ function RecipeCard({ recipe, liked, onLike, bookmarked, onBookmark, currentUser
         <div className={styles.tags}>
           {recipe.category && <span className="tag">{recipe.category}</span>}
         </div>
-        <h3 className={styles.title}>{recipe.title}</h3>
+        <h3 className={styles.title} onClick={openDetail} style={{cursor:'pointer'}}>{recipe.title}</h3>
         <p className={styles.meta}>
           <span>⏱ {timeStr}</span>
           <span> · </span>
@@ -347,8 +347,17 @@ function RecipeCard({ recipe, liked, onLike, bookmarked, onBookmark, currentUser
             </>)}
           </div>
           <div className={styles.author}>
-            <span className={styles.avatar}>{(recipe.author || '?').slice(0,2).toUpperCase()}</span>
-            {recipe.author || 'Anonymous'}
+            {recipe.author && recipe.author !== 'Anonymous' ? (
+              <Link to={`/profile/${recipe.author}`} className={styles.authorLink} onClick={e => e.stopPropagation()}>
+                <span className={styles.avatar}>{recipe.author.slice(0,2).toUpperCase()}</span>
+                {recipe.author}
+              </Link>
+            ) : (
+              <>
+                <span className={styles.avatar}>?</span>
+                Anonymous
+              </>
+            )}
           </div>
         </div>
 
