@@ -180,7 +180,10 @@ router.patch('/me/avatar', authenticate, async (req, res) => {
   try {
     await db.query('UPDATE users SET avatar_url = ? WHERE id = ?', [avatar_url, req.user.id]);
     res.json({ avatar_url });
-  } catch (err) { res.status(500).json({ error: err.message }); }
+  } catch (err) {
+    console.error('[avatar] error:', err);
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // ── PUBLIC PROFILE (wildcard — keep LAST) ─────────────────────────────────
