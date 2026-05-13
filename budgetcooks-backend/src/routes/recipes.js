@@ -58,12 +58,14 @@ const sql = `
            COUNT(DISTINCT cm.id) AS comment_count,
            ${userLikedCol}
            ${userBookmarkedCol}
-           r.pinned
+           r.pinned,
+           ce.challenge_id
     FROM recipes r
     LEFT JOIN users u    ON u.id = r.user_id
     LEFT JOIN categories c ON c.id = r.category_id
     LEFT JOIN likes l    ON l.recipe_id = r.id
     LEFT JOIN comments cm ON cm.recipe_id = r.id
+    LEFT JOIN challenge_entries ce ON ce.recipe_id = r.id
     ${userLikedJoin}
     ${userBookmarkedJoin}
     ${where}
