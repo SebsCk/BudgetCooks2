@@ -36,12 +36,15 @@ router.get('/:id', async (req, res) => {
   const [entries] = await db.query(`
     SELECT ce.submitted_at,
            r.id AS recipe_id, r.title, r.estimated_cost, r.image_url,
-           CASE WHEN r.anonymous = 1 THEN 'Anonymous' ELSE u.username END AS author
+           CASE WHEN r.anonymous = 1 THEN 'Anonymous' ELSE u.username END AS author,
+           COUNT(DISTINCT l.id) AS like_count
     FROM challenge_entries ce
     JOIN recipes r ON r.id = ce.recipe_id
     JOIN users u ON u.id = ce.user_id
+    LEFT JOIN likes l ON l.recipe_id = r.id
     WHERE ce.challenge_id = ?
-    ORDER BY ce.submitted_at DESC
+    GROUP BY ce.id, r.id, u.username
+    ORDER BY like_count DESC, ce.submitted_at ASC
   `, [req.params.id]);
 
   res.json({ ...rows[0], entries });
@@ -60,11 +63,42 @@ router.post('/', authenticate, async (req, res) => {
   res.status(201).json({ id: result.insertId, message: 'Challenge submitted for review' });
 });
 
-// PATCH /api/challenges/:id/status — admin approves/rejects
+// PATCH /api/challenges/:id/status — admin approves/rejects/closes
 router.patch('/:id/status', authenticate, authorizeAdmin, async (req, res) => {
   const { status } = req.body;
   const valid = ['active', 'rejected', 'closed'];
   if (!valid.includes(status)) return res.status(400).json({ error: 'Invalid status' });
+
+  if (status === 'closed') {
+    // Determine winner by most likes among entries
+    const [entries] = await db.query(`
+      SELECT r.id AS recipe_id, r.title, r.image_url,
+             CASE WHEN r.anonymous = 1 THEN 'Anonymous' ELSE u.username END AS author,
+             COUNT(DISTINCT l.id) AS like_count
+      FROM challenge_entries ce
+      JOIN recipes r ON r.id = ce.recipe_id
+      JOIN users u ON u.id = ce.user_id
+      LEFT JOIN likes l ON l.recipe_id = r.id
+      WHERE ce.challenge_id = ?
+      GROUP BY ce.id, r.id, u.username
+      ORDER BY like_count DESC
+      LIMIT 1
+    `, [req.params.id]);
+
+    if (entries.length > 0) {
+      const winner = entries[0];
+      await db.query(
+        `UPDATE challenges SET status = 'closed',
+          winner_recipe_id = ?, winner_username = ?,
+          winner_title = ?, winner_image_url = ?
+         WHERE id = ?`,
+        [winner.recipe_id, winner.author, winner.title, winner.image_url, req.params.id]
+      );
+    } else {
+      await db.query("UPDATE challenges SET status = 'closed' WHERE id = ?", [req.params.id]);
+    }
+    return res.json({ message: 'Challenge closed' });
+  }
 
   await db.query('UPDATE challenges SET status = ? WHERE id = ?', [status, req.params.id]);
   res.json({ message: `Challenge ${status}` });

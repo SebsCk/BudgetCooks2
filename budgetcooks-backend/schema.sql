@@ -183,7 +183,11 @@ CREATE TABLE challenges (
                                NOT NULL DEFAULT 'pending',
   starts_at     DATETIME       DEFAULT NULL,
   ends_at       DATETIME       DEFAULT NULL,
-  created_at    TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  created_at       TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  winner_recipe_id INT UNSIGNED   DEFAULT NULL,
+  winner_username  VARCHAR(80)    DEFAULT NULL,
+  winner_title     VARCHAR(255)   DEFAULT NULL,
+  winner_image_url LONGTEXT       DEFAULT NULL,
 
   PRIMARY KEY (id),
   KEY idx_challenges_created_by (created_by),

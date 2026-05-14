@@ -85,12 +85,28 @@ function ChallengeCard({ ch, token, user, isAdmin, onRefresh }) {
         <div className={styles.cardBody}>
           <div className={styles.cardMeta}>
             <span className={`${styles.badge} ${ch.status==='active'?styles.badgeLive:ch.status==='pending'?styles.badgeSoon:styles.badgeOpen}`}>
-              {ch.status==='active'?'🔥 Live':ch.status==='pending'?'⏳ Pending':ch.status==='closed'?'✅ Closed':'Open'}
+              {ch.status==='active'?'🔥 Live':ch.status==='pending'?'⏳ Pending':ch.status==='closed'?'🏁 Closed':'Open'}
             </span>
             {ch.budget_limit && <span className={styles.budget}>₱{ch.budget_limit} limit</span>}
           </div>
           <h3 className={styles.cardTitle}>{ch.title}</h3>
           <p className={styles.cardDesc}>{ch.description || 'Share your best budget recipe!'}</p>
+          {ch.status === 'closed' && ch.winner_recipe_id && (
+            <div className={styles.winnerBanner} onClick={() => navigate(`/recipe/${ch.winner_recipe_id}/comments`)}>
+              <span className={styles.winnerCrown}>🥇</span>
+              <div className={styles.winnerInfo}>
+                <span className={styles.winnerLabel}>Winner</span>
+                <span className={styles.winnerTitle}>{ch.winner_title}</span>
+                <span className={styles.winnerAuthor}>by {ch.winner_username}</span>
+              </div>
+              {ch.winner_image_url && (
+                <img src={ch.winner_image_url} alt={ch.winner_title} className={styles.winnerImg} />
+              )}
+            </div>
+          )}
+          {ch.status === 'closed' && !ch.winner_recipe_id && (
+            <div className={styles.noWinner}>No entries were submitted.</div>
+          )}
           <div className={styles.cardFooter}>
             <button
               className={styles.entriesBtn}
@@ -145,6 +161,7 @@ function ChallengeCard({ ch, token, user, isAdmin, onRefresh }) {
                           by <strong>{e.author}</strong> · ₱{e.estimated_cost || '—'}
                         </span>
                       </div>
+                      <span className={styles.entryLikes}>❤ {e.like_count || 0}</span>
                       <span className={styles.entryArrow}>→</span>
                     </div>
                   ))}
@@ -259,7 +276,7 @@ export default function ChallengesPage() {
   const fetchAll = async () => {
     setLoading(true)
     try {
-      const statuses = isAdmin ? ['active','pending','closed'] : ['active']
+      const statuses = isAdmin ? ['active','pending','closed'] : ['active','closed']
       const results = await Promise.all(
         statuses.map(s => fetch(`${API}/api/challenges?status=${s}`).then(r => r.ok ? r.json() : []))
       )
@@ -309,9 +326,9 @@ export default function ChallengesPage() {
                   </div>
                 </section>
               )}
-              {isAdmin && closed.length > 0 && (
+              {closed.length > 0 && (
                 <section className={styles.section}>
-                  <h2 className={styles.sectionTitle}>✅ Closed</h2>
+                  <h2 className={styles.sectionTitle}>🏁 Past Challenges</h2>
                   <div className={styles.grid}>
                     {closed.map(ch => <ChallengeCard key={ch.id} ch={ch} token={token} user={user} isAdmin={isAdmin} onRefresh={fetchAll} />)}
                   </div>

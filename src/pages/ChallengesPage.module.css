@@ -70,3 +70,27 @@
 .entryTitle { font-size: 0.88rem; font-weight: 700; color: var(--charcoal); }
 .entryMeta { font-size: 0.75rem; color: var(--warm-gray); }
 .entryArrow { font-size: 0.9rem; color: var(--terra); flex-shrink: 0; }
+
+/* Winner banner */
+.winnerBanner {
+  display: flex; align-items: center; gap: 0.85rem;
+  background: linear-gradient(135deg, #fff8e1, #fff3cd);
+  border: 2px solid #f59e0b;
+  border-radius: 12px; padding: 0.85rem 1rem;
+  margin-top: 0.75rem; cursor: pointer;
+  transition: box-shadow 0.15s;
+}
+.winnerBanner:hover { box-shadow: 0 4px 16px rgba(245,158,11,0.25); }
+.winnerCrown { font-size: 2rem; flex-shrink: 0; }
+.winnerInfo { display: flex; flex-direction: column; flex: 1; gap: 0.1rem; }
+.winnerLabel { font-size: 0.7rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.08em; color: #b45309; }
+.winnerTitle { font-size: 0.95rem; font-weight: 700; color: #1a1a1a; }
+.winnerAuthor { font-size: 0.78rem; color: #666; }
+.winnerImg { width: 52px; height: 52px; border-radius: 8px;
+  object-fit: cover; flex-shrink: 0; }
+.noWinner { font-size: 0.82rem; color: #999; margin-top: 0.5rem; font-style: italic; }
+
+/* Like count on entry rows */
+.entryLikes { font-size: 0.8rem; color: #e53e3e; font-weight: 600;
+  margin-left: auto; white-space: nowrap; }
