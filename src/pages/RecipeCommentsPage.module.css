@@ -96,3 +96,46 @@
   font-size: 0.88rem; line-height: 1.7; color: #444;
 }
 .stepList li, .ingredientList li { margin-bottom: 0.25rem; }
+
+/* Action buttons */
+.recipeActions {
+  display: flex; flex-wrap: wrap; gap: 0.5rem;
+  margin-top: 0.85rem;
+}
+.actionBtn {
+  display: inline-flex; align-items: center; gap: 0.3rem;
+  padding: 0.4rem 0.85rem; border-radius: 20px;
+  border: 1.5px solid #ddd; background: #fff;
+  font-size: 0.82rem; font-weight: 600; cursor: pointer;
+  transition: all 0.15s; color: #555;
+}
+.actionBtn:hover { border-color: var(--terra); color: var(--terra); }
+.actionLiked { border-color: #e53e3e !important; color: #e53e3e !important; background: #fff5f5 !important; }
+.actionSaved { border-color: var(--forest) !important; color: var(--forest) !important; background: #f0f7f0 !important; }
+
+/* Report box */
+.reportBox {
+  margin-top: 0.75rem; padding: 0.85rem;
+  background: #fff8f8; border: 1.5px solid #fed7d7;
+  border-radius: 10px;
+}
+.reportInput {
+  width: 100%; border: 1.5px solid #ddd; border-radius: 8px;
+  padding: 0.5rem 0.75rem; font-size: 0.85rem;
+  resize: vertical; margin-bottom: 0.5rem;
+  font-family: inherit;
+}
+.reportSubmit {
+  padding: 0.4rem 1rem; background: var(--terra); color: #fff;
+  border: none; border-radius: 8px; font-weight: 600;
+  cursor: pointer; font-size: 0.82rem;
+}
+.reportSubmit:disabled { opacity: 0.5; cursor: not-allowed; }
+.reportSent { color: #276749; font-size: 0.85rem; font-weight: 600; margin: 0; }
+
+/* Author link */
+.authorLink {
+  display: flex; align-items: center; gap: 0.5rem;
+  text-decoration: none; color: inherit; transition: color 0.15s;
+}
+.authorLink:hover { color: var(--terra); }

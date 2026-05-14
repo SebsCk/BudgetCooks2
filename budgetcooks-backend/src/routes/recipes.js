@@ -81,6 +81,21 @@ const sql = `
 
 // GET /api/recipes/:id — single recipe with steps + ingredients
 router.get('/:id', async (req, res) => {
+  const authHeader = req.headers.authorization;
+  let userId = null;
+  if (authHeader?.startsWith('Bearer ')) {
+    try {
+      const jwt = require('jsonwebtoken');
+      const decoded = jwt.verify(authHeader.slice(7), process.env.JWT_SECRET);
+      userId = decoded.id;
+    } catch {}
+  }
+
+  const userLikedCol      = userId ? `MAX(CASE WHEN ul.user_id = ${parseInt(userId)} THEN 1 ELSE 0 END) AS user_liked,` : `0 AS user_liked,`;
+  const userBookmarkedCol = userId ? `MAX(CASE WHEN bm.user_id = ${parseInt(userId)} THEN 1 ELSE 0 END) AS user_bookmarked,` : `0 AS user_bookmarked,`;
+  const userLikedJoin     = userId ? `LEFT JOIN likes ul ON ul.recipe_id = r.id AND ul.user_id = ${parseInt(userId)}` : '';
+  const userBookmarkedJoin= userId ? `LEFT JOIN bookmarks bm ON bm.recipe_id = r.id AND bm.user_id = ${parseInt(userId)}` : '';
+
   const [recipes] = await db.query(`
     SELECT r.*, 
            CASE WHEN u.is_deleted = 1 THEN 'Deleted User' WHEN r.anonymous = 1 THEN 'Anonymous' ELSE u.username END AS author,
@@ -88,12 +103,18 @@ router.get('/:id', async (req, res) => {
            u.id AS author_id,
            c.name AS category, c.slug AS category_slug,
            COUNT(DISTINCT l.id) AS like_count,
-           COUNT(DISTINCT cm.id) AS comment_count
+           COUNT(DISTINCT cm.id) AS comment_count,
+           ${userLikedCol}
+           ${userBookmarkedCol}
+           MAX(ce.challenge_id) AS challenge_id
     FROM recipes r
     LEFT JOIN users u ON u.id = r.user_id
     LEFT JOIN categories c ON c.id = r.category_id
     LEFT JOIN likes l ON l.recipe_id = r.id
     LEFT JOIN comments cm ON cm.recipe_id = r.id
+    LEFT JOIN challenge_entries ce ON ce.recipe_id = r.id
+    ${userLikedJoin}
+    ${userBookmarkedJoin}
     WHERE r.id = ?
     GROUP BY r.id
   `, [req.params.id]);

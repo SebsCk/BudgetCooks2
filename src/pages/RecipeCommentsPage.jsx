@@ -117,12 +117,19 @@ export default function RecipeCommentsPage() {
   const { user } = useAuth()
   const token = localStorage.getItem('token')
 
-  const [recipe,     setRecipe]     = useState(null)
-  const [comments,   setComments]   = useState([])
-  const [loading,    setLoading]    = useState(true)
-  const [newComment, setNewComment] = useState('')
-  const [posting,    setPosting]    = useState(false)
-  const [error,      setError]      = useState('')
+  const [recipe,       setRecipe]       = useState(null)
+  const [comments,     setComments]     = useState([])
+  const [loading,      setLoading]      = useState(true)
+  const [newComment,   setNewComment]   = useState('')
+  const [posting,      setPosting]      = useState(false)
+  const [error,        setError]        = useState('')
+  const [liked,        setLiked]        = useState(false)
+  const [likeCount,    setLikeCount]    = useState(0)
+  const [bookmarked,   setBookmarked]   = useState(false)
+  const [reportOpen,   setReportOpen]   = useState(false)
+  const [reportReason, setReportReason] = useState('')
+  const [reportSent,   setReportSent]   = useState(false)
+  const [copied,       setCopied]       = useState(false)
 
   useEffect(() => {
     async function load() {
@@ -133,7 +140,13 @@ export default function RecipeCommentsPage() {
           fetch(`${API}/api/recipes/${id}`),
           fetch(`${API}/api/comments?recipe_id=${id}`),
         ])
-        if (rRes.ok) setRecipe(await rRes.json())
+        if (rRes.ok) {
+          const rData = await rRes.json()
+          setRecipe(rData)
+          setLiked(!!rData.user_liked)
+          setLikeCount(rData.like_count || 0)
+          setBookmarked(!!rData.user_bookmarked)
+        }
         else setError('Recipe not found.')
         if (cRes.ok) setComments(await cRes.json())
       } catch { setError('Failed to load. Check your connection.') }
@@ -141,6 +154,49 @@ export default function RecipeCommentsPage() {
     }
     load()
   }, [id])
+
+  const handleLike = async () => {
+    if (!token) return
+    const method = liked ? 'DELETE' : 'POST'
+    try {
+      const res = await fetch(`${API}/api/recipes/${id}/like`, {
+        method, headers: { Authorization: `Bearer ${token}` }
+      })
+      if (res.ok) {
+        setLiked(l => !l)
+        setLikeCount(n => liked ? n - 1 : n + 1)
+      }
+    } catch {}
+  }
+
+  const handleBookmark = async () => {
+    if (!token) return
+    const method = bookmarked ? 'DELETE' : 'POST'
+    try {
+      const res = await fetch(`${API}/api/recipes/${id}/bookmark`, {
+        method, headers: { Authorization: `Bearer ${token}` }
+      })
+      if (res.ok) setBookmarked(b => !b)
+    } catch {}
+  }
+
+  const handleReport = async () => {
+    if (!reportReason.trim() || !token) return
+    try {
+      const res = await fetch(`${API}/api/recipes/${id}/report`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ reason: reportReason }),
+      })
+      if (res.ok) { setReportSent(true); setReportReason('') }
+    } catch {}
+  }
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(window.location.href)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
 
   const postComment = async () => {
     if (!newComment.trim() || !token) return
@@ -216,9 +272,50 @@ export default function RecipeCommentsPage() {
               )}
             </div>
             <div className={styles.recipeAuthor}>
-              <div className={styles.authorAvatar}>{(recipe.author || '?').slice(0, 2).toUpperCase()}</div>
-              <span>{recipe.author || 'Anonymous'}</span>
+              {recipe.author && recipe.author !== 'Anonymous' ? (
+                <Link to={`/profile/${recipe.author}`} className={styles.authorLink}>
+                  <div className={styles.authorAvatar}>{recipe.author.slice(0, 2).toUpperCase()}</div>
+                  <span>{recipe.author}</span>
+                </Link>
+              ) : (
+                <>
+                  <div className={styles.authorAvatar}>?</div>
+                  <span>Anonymous</span>
+                </>
+              )}
             </div>
+            <div className={styles.recipeActions}>
+              <button className={`${styles.actionBtn} ${liked ? styles.actionLiked : ''}`} onClick={handleLike} title={liked ? 'Unlike' : 'Like'}>
+                {liked ? '❤️' : '🤍'} {likeCount}
+              </button>
+              <button className={`${styles.actionBtn} ${bookmarked ? styles.actionSaved : ''}`} onClick={handleBookmark} title={bookmarked ? 'Unsave' : 'Save'}>
+                🔖 {bookmarked ? 'Saved' : 'Save'}
+              </button>
+              <button className={styles.actionBtn} onClick={handleCopy} title="Copy link">
+                {copied ? '✅ Copied!' : '🔗 Copy Link'}
+              </button>
+              {token && (
+                <button className={styles.actionBtn} onClick={() => setReportOpen(r => !r)} title="Report">
+                  🚩 Report
+                </button>
+              )}
+            </div>
+            {reportOpen && (
+              <div className={styles.reportBox}>
+                {reportSent ? (
+                  <p className={styles.reportSent}>✅ Report submitted. Thank you!</p>
+                ) : (
+                  <>
+                    <textarea className={styles.reportInput} rows={2}
+                      placeholder="Describe the issue…"
+                      value={reportReason} onChange={e => setReportReason(e.target.value)} />
+                    <button className={styles.reportSubmit} onClick={handleReport} disabled={!reportReason.trim()}>
+                      Submit Report
+                    </button>
+                  </>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </div>
