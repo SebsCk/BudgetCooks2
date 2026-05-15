@@ -39,6 +39,7 @@ export default function NotificationsPage() {
   }, [user])
 
   const handleClick = (n) => {
+    if (n.type === 'follow') { navigate(`/profile/${n.actor}`); return }
     const dest = n.comment_id
       ? `/recipe/${n.recipe_id}/comments?comment=${n.comment_id}`
       : `/recipe/${n.recipe_id}/comments`
@@ -61,7 +62,7 @@ export default function NotificationsPage() {
             <div className={styles.emptyState}>
               <span className={styles.emptyIcon}>🔕</span>
               <p>No notifications yet.</p>
-              <p className={styles.emptyHint}>When someone likes or comments on your recipes, you'll see it here.</p>
+              <p className={styles.emptyHint}>When someone likes, comments on your recipes, or follows you, you'll see it here.</p>
             </div>
           )}
 
@@ -74,13 +75,13 @@ export default function NotificationsPage() {
                 onClick={() => handleClick(n)}
               >
                 <div className={styles.iconWrap}>
-                  {n.type === 'like' ? '❤️' : '💬'}
+                  {n.type === 'like' ? '❤️' : n.type === 'follow' ? '👤' : '💬'}
                 </div>
                 <div className={styles.itemBody}>
                   <p className={styles.itemText}>
                     <strong>{n.actor}</strong>{' '}
-                    {n.type === 'like' ? 'liked' : 'commented on'}{' '}
-                    <em>{n.recipe_title}</em>
+                    {n.type === 'follow' ? 'started following you' : n.type === 'like' ? 'liked' : 'commented on'}{' '}
+                    {n.type !== 'follow' && <em>{n.recipe_title}</em>}
                   </p>
                   {n.type === 'comment' && n.preview && (
                     <p className={styles.preview}>"{n.preview}"</p>

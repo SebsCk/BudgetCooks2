@@ -49,6 +49,26 @@ export default function ProfilePage() {
   const [avatarUploading, setAvatarUploading] = useState(false)
   const [avatarError,     setAvatarError]     = useState('')
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [following,     setFollowing]     = useState(false)
+  const [followerCount, setFollowerCount] = useState(0)
+  const [followingCount,setFollowingCount]= useState(0)
+  const [followLoading, setFollowLoading] = useState(false)
+
+  const handleFollow = async () => {
+    if (!token) { navigate('/login'); return }
+    setFollowLoading(true)
+    try {
+      const method = following ? 'DELETE' : 'POST'
+      const res = await fetch(`${API}/api/users/${username}/follow`, {
+        method, headers: { Authorization: `Bearer ${token}` }
+      })
+      if (res.ok) {
+        setFollowing(f => !f)
+        setFollowerCount(n => following ? n - 1 : n + 1)
+      }
+    } catch {}
+    setFollowLoading(false)
+  }
 
   const handleAvatarUpload = async (e) => {
     const file = e.target.files?.[0]
@@ -84,7 +104,12 @@ export default function ProfilePage() {
     setError('')
     fetch(`${API}/api/users/${username}`)
       .then(r => r.ok ? r.json() : Promise.reject('Not found'))
-      .then(data => setProfile(data))
+      .then(data => {
+        setProfile(data)
+        setFollowing(data.is_following || false)
+        setFollowerCount(data.follower_count || 0)
+        setFollowingCount(data.following_count || 0)
+      })
       .catch(() => setError('User not found.'))
       .finally(() => setLoading(false))
   }, [username])
@@ -162,7 +187,8 @@ export default function ProfilePage() {
           <div className={styles.statRow}>
             <div className={styles.stat}><strong>{profile.recipes?.length || 0}</strong><span>Recipes</span></div>
             <div className={styles.stat}><strong>{totalLikes}</strong><span>Total Likes</span></div>
-            <div className={styles.stat}><strong>{profile.liked?.length || 0}</strong><span>Liked</span></div>
+            <div className={styles.stat}><strong>{followerCount}</strong><span>Followers</span></div>
+            <div className={styles.stat}><strong>{followingCount}</strong><span>Following</span></div>
           </div>
         </div>
         <div className={styles.heroActions}>
@@ -172,7 +198,13 @@ export default function ProfilePage() {
               <button className={styles.dangerBtn} onClick={() => setShowDeleteConfirm(true)}>Delete Account</button>
             </>
           ) : (
-            <button className={styles.editBtn} onClick={() => navigate('/feed')}>Browse Recipes</button>
+            <button
+              className={following ? styles.unfollowBtn : styles.editBtn}
+              onClick={handleFollow}
+              disabled={followLoading}
+            >
+              {followLoading ? '…' : following ? '✓ Following' : '+ Follow'}
+            </button>
           )}
         </div>
       </div>

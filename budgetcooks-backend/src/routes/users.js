@@ -69,7 +69,16 @@ router.get('/me/notifications', authenticate, async (req, res) => {
       ORDER BY c.created_at DESC LIMIT 20
     `, [req.user.id, req.user.id]);
 
-    const all = [...likes, ...comments]
+    const [follows] = await db.query(`
+      SELECT 'follow' AS type, u.username AS actor, NULL AS recipe_title,
+             NULL AS recipe_id, NULL AS comment_id, NULL AS preview, f.created_at
+      FROM follows f
+      JOIN users u ON u.id = f.follower_id
+      WHERE f.following_id = ?
+      ORDER BY f.created_at DESC LIMIT 20
+    `, [req.user.id]);
+
+    const all = [...likes, ...comments, ...follows]
       .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
       .slice(0, 30);
     res.json(all);
@@ -186,6 +195,33 @@ router.patch('/me/avatar', authenticate, async (req, res) => {
   }
 });
 
+// POST /api/users/:username/follow
+router.post('/:username/follow', authenticate, async (req, res) => {
+  try {
+    const [target] = await db.query('SELECT id FROM users WHERE username = ?', [req.params.username]);
+    if (!target.length) return res.status(404).json({ error: 'User not found' });
+    if (target[0].id === req.user.id) return res.status(400).json({ error: 'Cannot follow yourself' });
+    await db.query(
+      'INSERT IGNORE INTO follows (follower_id, following_id) VALUES (?, ?)',
+      [req.user.id, target[0].id]
+    );
+    res.json({ following: true });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// DELETE /api/users/:username/follow
+router.delete('/:username/follow', authenticate, async (req, res) => {
+  try {
+    const [target] = await db.query('SELECT id FROM users WHERE username = ?', [req.params.username]);
+    if (!target.length) return res.status(404).json({ error: 'User not found' });
+    await db.query(
+      'DELETE FROM follows WHERE follower_id = ? AND following_id = ?',
+      [req.user.id, target[0].id]
+    );
+    res.json({ following: false });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
 // ── PUBLIC PROFILE (wildcard — keep LAST) ─────────────────────────────────
 
 // GET /api/users/me/bookmarks
@@ -224,6 +260,15 @@ router.post('/me/bookmarks/:recipeId', authenticate, async (req, res) => {
 
 router.get('/:username', async (req, res) => {
   try {
+    const viewerId = (() => {
+      try {
+        const jwt = require('jsonwebtoken');
+        const h = req.headers.authorization;
+        if (h?.startsWith('Bearer ')) return jwt.verify(h.slice(7), process.env.JWT_SECRET).id;
+      } catch {}
+      return null;
+    })();
+
     const [users] = await db.query(
       'SELECT id, username, avatar_url, created_at FROM users WHERE username = ?',
       [req.params.username]
@@ -268,7 +313,17 @@ router.get('/:username', async (req, res) => {
       ORDER BY c.created_at DESC LIMIT 20
     `, [user.id]);
 
-    res.json({ ...user, recipes, liked, challenges, comments });
+    const [[{ follower_count }]] = await db.query(
+      'SELECT COUNT(*) AS follower_count FROM follows WHERE following_id = ?', [user.id]
+    );
+    const [[{ following_count }]] = await db.query(
+      'SELECT COUNT(*) AS following_count FROM follows WHERE follower_id = ?', [user.id]
+    );
+    const is_following = viewerId ? (await db.query(
+      'SELECT id FROM follows WHERE follower_id = ? AND following_id = ?', [viewerId, user.id]
+    ))[0].length > 0 : false;
+
+    res.json({ ...user, recipes, liked, challenges, comments, follower_count, following_count, is_following });
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 

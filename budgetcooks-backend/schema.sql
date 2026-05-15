@@ -201,6 +201,17 @@ CREATE TABLE challenges (
 -- -------------------------------------------------------------
 --  CHALLENGE_ENTRIES
 -- -------------------------------------------------------------
+CREATE TABLE follows (
+  id          INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  follower_id INT UNSIGNED NOT NULL,
+  following_id INT UNSIGNED NOT NULL,
+  created_at  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  UNIQUE KEY uq_follow (follower_id, following_id),
+  FOREIGN KEY (follower_id)  REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY (following_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 CREATE TABLE challenge_entries (
   id           INT UNSIGNED NOT NULL AUTO_INCREMENT,
   challenge_id INT UNSIGNED NOT NULL,
