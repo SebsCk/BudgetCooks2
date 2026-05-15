@@ -102,7 +102,7 @@ export default function ProfilePage() {
   useEffect(() => {
     setLoading(true)
     setError('')
-    fetch(`${API}/api/users/${username}`)
+    fetch(`${API}/api/users/${username}`, { headers: token ? { Authorization: `Bearer ${token}` } : {} })
       .then(r => r.ok ? r.json() : Promise.reject('Not found'))
       .then(data => {
         setProfile(data)
