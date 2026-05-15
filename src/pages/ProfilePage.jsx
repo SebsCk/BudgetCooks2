@@ -53,6 +53,22 @@ export default function ProfilePage() {
   const [followerCount, setFollowerCount] = useState(0)
   const [followingCount,setFollowingCount]= useState(0)
   const [followLoading, setFollowLoading] = useState(false)
+  const [followModal,   setFollowModal]   = useState(null) // 'followers' | 'following' | null
+  const [followList,    setFollowList]    = useState([])
+  const [followListLoading, setFollowListLoading] = useState(false)
+
+  const openFollowModal = async (type) => {
+    setFollowModal(type)
+    setFollowList([])
+    setFollowListLoading(true)
+    try {
+      const res = await fetch(`${API}/api/users/${username}/${type}`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {}
+      })
+      if (res.ok) setFollowList(await res.json())
+    } catch {}
+    setFollowListLoading(false)
+  }
 
   const handleFollow = async () => {
     if (!token) { navigate('/login'); return }
@@ -187,8 +203,12 @@ export default function ProfilePage() {
           <div className={styles.statRow}>
             <div className={styles.stat}><strong>{profile.recipes?.length || 0}</strong><span>Recipes</span></div>
             <div className={styles.stat}><strong>{totalLikes}</strong><span>Total Likes</span></div>
-            <div className={styles.stat}><strong>{followerCount}</strong><span>Followers</span></div>
-            <div className={styles.stat}><strong>{followingCount}</strong><span>Following</span></div>
+            <button className={styles.statBtn} onClick={() => openFollowModal('followers')}>
+              <strong>{followerCount}</strong><span>Followers</span>
+            </button>
+            <button className={styles.statBtn} onClick={() => openFollowModal('following')}>
+              <strong>{followingCount}</strong><span>Following</span>
+            </button>
           </div>
         </div>
         <div className={styles.heroActions}>
@@ -251,6 +271,41 @@ export default function ProfilePage() {
             : <div className={styles.grid}>{bookmarks.map(r => <RecipeMini key={r.id} recipe={r} />)}</div>
         )}
       </div>
+
+      {/* Followers / Following Modal */}
+      {followModal && (
+        <div className={styles.modalOverlay} onClick={() => setFollowModal(null)}>
+          <div className={styles.modal} onClick={e => e.stopPropagation()}>
+            <h3 className={styles.modalTitle}>
+              {followModal === 'followers' ? `👥 Followers (${followerCount})` : `👣 Following (${followingCount})`}
+            </h3>
+            {followListLoading && <p className={styles.empty}>Loading…</p>}
+            {!followListLoading && followList.length === 0 && (
+              <p className={styles.empty}>
+                {followModal === 'followers' ? 'No followers yet.' : 'Not following anyone yet.'}
+              </p>
+            )}
+            {!followListLoading && followList.map(u => (
+              <div key={u.id} className={styles.followRow}>
+                <div className={styles.followAvatar}
+                  style={{background:'var(--moss)',color:'#fff',width:38,height:38,borderRadius:'50%',display:'flex',alignItems:'center',justifyContent:'center',fontWeight:700,flexShrink:0,overflow:'hidden'}}>
+                  {u.avatar_url
+                    ? <img src={u.avatar_url} alt={u.username} style={{width:'100%',height:'100%',objectFit:'cover'}} />
+                    : u.username.slice(0,2).toUpperCase()
+                  }
+                </div>
+                <span
+                  className={styles.followUsername}
+                  onClick={() => { setFollowModal(null); navigate(`/profile/${u.username}`) }}
+                >
+                  {u.username}
+                </span>
+              </div>
+            ))}
+            <button className={styles.modalClose} onClick={() => setFollowModal(null)}>Close</button>
+          </div>
+        </div>
+      )}
 
       {/* Delete Account Modal */}
       {showDeleteConfirm && (

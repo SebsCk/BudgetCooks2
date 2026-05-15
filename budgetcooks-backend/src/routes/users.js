@@ -195,6 +195,38 @@ router.patch('/me/avatar', authenticate, async (req, res) => {
   }
 });
 
+// GET /api/users/:username/followers
+router.get('/:username/followers', async (req, res) => {
+  try {
+    const [target] = await db.query('SELECT id FROM users WHERE username = ?', [req.params.username]);
+    if (!target.length) return res.status(404).json({ error: 'User not found' });
+    const [rows] = await db.query(`
+      SELECT u.id, u.username, u.avatar_url
+      FROM follows f
+      JOIN users u ON u.id = f.follower_id
+      WHERE f.following_id = ?
+      ORDER BY f.created_at DESC
+    `, [target[0].id]);
+    res.json(rows);
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// GET /api/users/:username/following
+router.get('/:username/following', async (req, res) => {
+  try {
+    const [target] = await db.query('SELECT id FROM users WHERE username = ?', [req.params.username]);
+    if (!target.length) return res.status(404).json({ error: 'User not found' });
+    const [rows] = await db.query(`
+      SELECT u.id, u.username, u.avatar_url
+      FROM follows f
+      JOIN users u ON u.id = f.following_id
+      WHERE f.follower_id = ?
+      ORDER BY f.created_at DESC
+    `, [target[0].id]);
+    res.json(rows);
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
 // POST /api/users/:username/follow
 router.post('/:username/follow', authenticate, async (req, res) => {
   try {

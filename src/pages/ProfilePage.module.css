@@ -151,3 +151,38 @@
   cursor: pointer; transition: all 0.15s;
 }
 .unfollowBtn:hover { border-color: #e53e3e; color: #e53e3e; background: #fff5f5; }
+
+/* Clickable stat buttons */
+.statBtn {
+  background: none; border: none; cursor: pointer;
+  display: flex; flex-direction: column; align-items: center;
+  gap: 0.15rem; padding: 0.35rem 0.65rem; border-radius: 8px;
+  transition: background 0.15s;
+}
+.statBtn:hover { background: rgba(0,0,0,0.05); }
+.statBtn strong { font-size: 1.15rem; font-weight: 700; color: var(--forest); }
+.statBtn span { font-size: 0.72rem; color: var(--warm-gray); }
+
+/* Follow list modal */
+.followRow {
+  display: flex; align-items: center; gap: 0.75rem;
+  padding: 0.65rem 0; border-bottom: 1px solid #f0f0f0;
+}
+.followRow:last-of-type { border-bottom: none; }
+.followUsername {
+  font-weight: 600; font-size: 0.95rem; cursor: pointer;
+  color: var(--forest); transition: color 0.15s;
+}
+.followUsername:hover { color: var(--terra); }
+.modalTitle {
+  font-size: 1.05rem; font-weight: 700; margin: 0 0 1rem;
+  color: var(--forest);
+}
+.modalClose {
+  display: block; width: 100%; margin-top: 1rem;
+  padding: 0.5rem; border-radius: 8px;
+  border: 1.5px solid #ddd; background: #fff;
+  font-weight: 600; cursor: pointer; color: #555;
+  transition: all 0.15s;
+}
+.modalClose:hover { border-color: var(--terra); color: var(--terra); }
