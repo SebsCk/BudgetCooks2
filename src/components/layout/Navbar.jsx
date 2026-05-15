@@ -158,7 +158,7 @@ export default function Navbar() {
             <div className={styles.profileWrap} ref={dropRef}>
               <button className={styles.avatarBtn} onClick={() => setDropOpen(o => !o)} aria-label="Profile menu">
                 <Link to={`/profile/${user.username}`} className={styles.avatarCircleLink} onClick={e => e.stopPropagation()} title={`View ${user.username}'s profile`}>
-                  {user.avatar_url
+                    {user.avatar_url
     ? <img src={user.avatar_url} alt="" className={styles.avatarCircle} style={{objectFit:'cover'}} />
     : <span className={styles.avatarCircle}>{user.username.slice(0,2).toUpperCase()}</span>}
                 </Link>

@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useAuth } from '../context/AuthContext'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import styles from './ProfilePage.module.css'
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:4000'
@@ -30,7 +30,9 @@ export default function ProfilePage() {
   const { user, setUser } = useAuth()
   const token    = localStorage.getItem('token')
   const navigate = useNavigate()
+  const { username } = useParams()
   const fileRef  = useRef(null)
+  const isOwnProfile = user?.username === username
 
   const [profile,   setProfile]   = useState(null)
   const [recipes,   setRecipes]   = useState([])
@@ -41,15 +43,19 @@ export default function ProfilePage() {
   const [loading,   setLoading]   = useState(true)
 
   useEffect(() => {
-    if (!user) { navigate('/login'); return }
+    if (!username) return
+    const headers = token ? { Authorization: `Bearer ${token}` } : {}
     Promise.all([
-      fetch(`${API}/api/users/me`, { headers: { Authorization: `Bearer ${token}` } }).then(r => r.ok ? r.json() : null),
-      fetch(`${API}/api/recipes?user_id=${user.id}`).then(r => r.ok ? r.json() : []),
+      // If viewing own profile, use /me for full data; otherwise fetch by username
+      isOwnProfile
+        ? fetch(`${API}/api/users/me`, { headers }).then(r => r.ok ? r.json() : null)
+        : fetch(`${API}/api/users/by-username/${username}`).then(r => r.ok ? r.json() : null),
+      fetch(`${API}/api/recipes?author=${username}`).then(r => r.ok ? r.json() : []),
     ]).then(([prof, recs]) => {
       if (prof) setProfile(prof)
       if (Array.isArray(recs)) setRecipes(recs)
     }).finally(() => setLoading(false))
-  }, [user])
+  }, [username, isOwnProfile])
 
   const handleFileChange = async e => {
     const file = e.target.files?.[0]
@@ -121,7 +127,7 @@ export default function ProfilePage() {
             ) : (
               <div className={styles.avatarPlaceholder}>{initials}</div>
             )}
-            <div className={styles.avatarActions}>
+            {isOwnProfile && <div className={styles.avatarActions}>
               <button className={styles.uploadBtn} onClick={() => fileRef.current?.click()}>
                 📷 Choose Photo
               </button>
@@ -131,12 +137,12 @@ export default function ProfilePage() {
                 </button>
               )}
             </div>
-          </div>
+} </div>                         
 
           <input ref={fileRef} type="file" accept="image/*" style={{display:'none'}}
             onChange={handleFileChange} />
 
-          {preview && (
+          {isOwnProfile && preview && (
             <div className={styles.previewActions}>
               <p className={styles.previewHint}>Preview — looks good?</p>
               <div style={{display:'flex',gap:'0.75rem'}}>
@@ -151,11 +157,11 @@ export default function ProfilePage() {
           {message && <p className={styles.success}>{message}</p>}
           {error   && <p className={styles.error}>⚠ {error}</p>}
 
-          <div className={styles.hints}>
+          {isOwnProfile && <div className={styles.hints}>
             <p>• Accepted: JPG, PNG, GIF, WebP</p>
             <p>• Max display size: 200×200px (auto-resized)</p>
             <p>• Keep file under 500KB for best performance</p>
-          </div>
+          </div>}
         </div>
 
         {/* PROFILE INFO */}
