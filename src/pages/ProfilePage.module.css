@@ -186,3 +186,13 @@
   transition: all 0.15s;
 }
 .modalClose:hover { border-color: var(--terra); color: var(--terra); }
+
+.unfollowListBtn {
+  margin-left: auto; padding: 0.3rem 0.75rem;
+  border-radius: 20px; border: 1.5px solid #ddd;
+  background: #fff; color: #555; font-size: 0.78rem;
+  font-weight: 600; cursor: pointer; flex-shrink: 0;
+  transition: all 0.15s;
+}
+.unfollowListBtn:hover { border-color: #e53e3e; color: #e53e3e; background: #fff5f5; }
+.unfollowListBtn:disabled { opacity: 0.5; cursor: not-allowed; }

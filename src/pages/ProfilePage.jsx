@@ -56,6 +56,23 @@ export default function ProfilePage() {
   const [followModal,   setFollowModal]   = useState(null) // 'followers' | 'following' | null
   const [followList,    setFollowList]    = useState([])
   const [followListLoading, setFollowListLoading] = useState(false)
+  const [unfollowing, setUnfollowing] = useState({}) // { [username]: true } while in progress
+
+  const handleUnfollowFromList = async (targetUsername) => {
+    if (!token) return
+    setUnfollowing(u => ({ ...u, [targetUsername]: true }))
+    try {
+      const res = await fetch(`${API}/api/users/${targetUsername}/follow`, {
+        method: 'DELETE', headers: { Authorization: `Bearer ${token}` }
+      })
+      if (res.ok) {
+        setFollowList(list => list.filter(u => u.username !== targetUsername))
+        setFollowingCount(n => n - 1)
+        if (targetUsername === username) { setFollowing(false) }
+      }
+    } catch {}
+    setUnfollowing(u => ({ ...u, [targetUsername]: false }))
+  }
 
   const openFollowModal = async (type) => {
     setFollowModal(type)
@@ -300,6 +317,15 @@ export default function ProfilePage() {
                 >
                   {u.username}
                 </span>
+                {followModal === 'following' && isMe && (
+                  <button
+                    className={styles.unfollowListBtn}
+                    onClick={() => handleUnfollowFromList(u.username)}
+                    disabled={unfollowing[u.username]}
+                  >
+                    {unfollowing[u.username] ? '…' : 'Unfollow'}
+                  </button>
+                )}
               </div>
             ))}
             <button className={styles.modalClose} onClick={() => setFollowModal(null)}>Close</button>
