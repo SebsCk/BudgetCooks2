@@ -294,32 +294,4 @@ router.patch('/admin/recipes/:id/pin', authenticate, authorizeAdmin, async (req,
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// GET /api/users/me — current user profile
-router.get('/me', authenticate, async (req, res) => {
-  try {
-    const [rows] = await db.query(
-      'SELECT id, username, email, role, avatar_url, created_at FROM users WHERE id = ?',
-      [req.user.id]
-    );
-    if (!rows.length) return res.status(404).json({ error: 'Not found' });
-    res.json(rows[0]);
-  } catch (err) { res.status(500).json({ error: err.message }); }
-});
-
-// PUT /api/users/avatar — upload/remove profile picture (base64)
-router.put('/avatar', authenticate, async (req, res) => {
-  const { avatar_url } = req.body;
-  if (avatar_url && avatar_url.length > 700000) {
-    return res.status(400).json({ error: 'Image too large. Please use a smaller image (under 500KB).' });
-  }
-  try {
-    await db.query('UPDATE users SET avatar_url = ? WHERE id = ?', [avatar_url || null, req.user.id]);
-    const [rows] = await db.query(
-      'SELECT id, username, email, role, avatar_url FROM users WHERE id = ?',
-      [req.user.id]
-    );
-    res.json(rows[0]);
-  } catch (err) { res.status(500).json({ error: err.message }); }
-});
-
 module.exports = router;
