@@ -1,145 +1,45 @@
-.page { max-width: 860px; margin: 0 auto; padding: 2rem 1rem 4rem; }
+.page { min-height: 100vh; background: var(--cream); }
+.header { background: var(--olive); color: var(--cream); padding: 2rem 1.25rem; text-align: center; }
+.header h1 { font-size: 1.8rem; margin: 0; }
+.inner { max-width: 680px; margin: 0 auto; padding: 2rem 1.25rem 4rem; display: flex; flex-direction: column; gap: 1.5rem; }
 
-/* Hero */
-.hero {
-  display: flex; align-items: flex-start; gap: 1.5rem;
-  background: var(--white); border: 1px solid var(--cream2);
-  border-radius: 14px; padding: 2rem; margin-bottom: 1.5rem;
-}
-.avatarWrap {
-  position: relative; width: 72px; height: 72px; flex-shrink: 0;
-}
-.avatar {
-  width: 72px; height: 72px; border-radius: 50%;
-  background: var(--moss); color: #fff;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 1.6rem; font-weight: 700;
-}
-.avatarImg {
-  width: 72px; height: 72px; border-radius: 50%;
-  object-fit: cover; display: block;
-}
-.avatarOverlay {
-  position: absolute; inset: 0; border-radius: 50%;
-  background: rgba(0,0,0,0.5); color: #fff;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 1.3rem; cursor: pointer; opacity: 0;
-  transition: opacity 0.2s;
-}
-.avatarWrap:hover .avatarOverlay { opacity: 1; }
-.avatarError {
-  position: absolute; top: 100%; left: 50%; transform: translateX(-50%);
-  white-space: nowrap; font-size: 0.72rem; color: #c0392b; margin-top: 0.3rem;
-}
-.heroInfo { flex: 1; }
-.username { font-size: 1.6rem; font-weight: 800; color: var(--forest); margin: 0 0 0.25rem; }
-.joined { color: var(--warm-gray); font-size: 0.88rem; margin: 0 0 1rem; }
-.statRow { display: flex; gap: 2rem; }
-.stat { display: flex; flex-direction: column; }
-.stat strong { font-size: 1.3rem; font-weight: 800; color: var(--terra); }
-.stat span { font-size: 0.8rem; color: var(--warm-gray); }
-.editBtn {
-  background: var(--terra); color: #fff; border: none;
-  border-radius: 8px; padding: 0.5rem 1.1rem;
-  font-weight: 600; cursor: pointer; white-space: nowrap;
-  font-size: 0.9rem; align-self: flex-start;
-}
-.editBtn:hover { background: #a8431f; }
+.card { background: var(--white); border-radius: 12px; padding: 1.75rem; box-shadow: 0 1px 4px rgba(0,0,0,0.07); }
+.card h2 { font-size: 1rem; font-weight: 700; color: var(--charcoal); border-bottom: 2px solid var(--cream2); padding-bottom: 0.6rem; margin-bottom: 1.25rem; }
 
-/* Tabs */
-.tabs { display: flex; gap: 0.5rem; margin-bottom: 1.25rem; flex-wrap: wrap; }
-.tab {
-  padding: 0.5rem 1rem; border-radius: 999px;
-  border: 1px solid var(--cream2); background: var(--white);
-  font-size: 0.88rem; cursor: pointer; color: var(--forest);
-  font-weight: 500; transition: all 0.15s;
-}
-.tab:hover { border-color: var(--terra); color: var(--terra); }
-.tabActive { background: var(--terra); color: #fff; border-color: var(--terra); }
+/* AVATAR */
+.avatarArea { display: flex; align-items: center; gap: 1.5rem; margin-bottom: 1rem; }
+.avatarImg { width: 90px; height: 90px; border-radius: 50%; object-fit: cover; border: 3px solid var(--cream2); }
+.avatarPlaceholder { width: 90px; height: 90px; border-radius: 50%; background: var(--terra); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 1.6rem; font-weight: 700; flex-shrink: 0; }
+.avatarActions { display: flex; flex-direction: column; gap: 0.5rem; }
+.uploadBtn { padding: 0.55rem 1.1rem; background: var(--olive); color: #fff; border: none; border-radius: 8px; font-size: 0.88rem; font-weight: 600; cursor: pointer; }
+.uploadBtn:hover { opacity: 0.9; }
+.removeBtn { padding: 0.45rem 1rem; background: none; border: 1.5px solid #ddd; color: var(--terra); border-radius: 8px; font-size: 0.82rem; cursor: pointer; }
+.removeBtn:hover { background: var(--terra); color: #fff; border-color: var(--terra); }
 
-/* Recipe grid */
-.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1rem; }
-.recipeCard {
-  display: flex; flex-direction: column;
-  background: var(--white); border: 1px solid var(--cream2);
-  border-radius: 10px; overflow: hidden; text-decoration: none;
-  transition: box-shadow 0.15s, transform 0.15s;
-}
-.recipeCard:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.08); transform: translateY(-2px); }
-.recipeThumb {
-  aspect-ratio: 16/9; background: var(--cream);
-  display: flex; align-items: center; justify-content: center;
-  font-size: 2rem; overflow: hidden;
-}
-.recipeThumb img { width: 100%; height: 100%; object-fit: cover; }
-.recipeInfo { padding: 0.75rem; }
-.recipeTitle { font-weight: 600; color: var(--forest); font-size: 0.9rem; margin: 0 0 0.25rem; }
-.recipeMeta { font-size: 0.8rem; color: var(--warm-gray); margin: 0; }
+.previewActions { padding: 0.75rem; background: var(--cream); border-radius: 8px; margin-bottom: 0.75rem; }
+.previewHint { font-size: 0.85rem; color: var(--warm-gray); margin-bottom: 0.5rem; }
+.cancelBtn { padding: 0.45rem 1rem; background: none; border: 1.5px solid #ddd; border-radius: 8px; font-size: 0.85rem; cursor: pointer; }
+.saveBtn { padding: 0.45rem 1.1rem; background: var(--terra); color: #fff; border: none; border-radius: 8px; font-size: 0.85rem; font-weight: 600; cursor: pointer; }
+.saveBtn:disabled { opacity: 0.6; }
 
-/* Challenges */
-.challengeList { display: flex; flex-direction: column; gap: 0.75rem; }
-.challengeRow {
-  display: flex; align-items: center; justify-content: space-between;
-  background: var(--white); border: 1px solid var(--cream2);
-  border-radius: 10px; padding: 1rem 1.25rem;
-}
-.challengeTitle { font-weight: 600; color: var(--forest); margin: 0 0 0.25rem; }
-.challengeMeta { font-size: 0.83rem; color: var(--warm-gray); margin: 0; }
-.statusPill {
-  font-size: 0.75rem; font-weight: 600; padding: 0.25rem 0.6rem;
-  border-radius: 999px; text-transform: capitalize;
-}
-.status_active   { background: #d4edda; color: #155724; }
-.status_pending  { background: #fff3cd; color: #856404; }
-.status_closed   { background: #f8d7da; color: #721c24; }
-.status_rejected { background: #e2e3e5; color: #383d41; }
+.hints { font-size: 0.78rem; color: var(--warm-gray); margin-top: 0.75rem; display: flex; flex-direction: column; gap: 0.15rem; }
+.success { color: #15803d; background: #f0fdf4; padding: 0.5rem 0.75rem; border-radius: 6px; font-size: 0.85rem; margin: 0.5rem 0 0; }
+.error   { color: #b91c1c; background: #fef2f2; padding: 0.5rem 0.75rem; border-radius: 6px; font-size: 0.85rem; margin: 0.5rem 0 0; }
 
-/* Empty + skeleton */
-.empty { color: var(--warm-gray); text-align: center; padding: 3rem 0; }
-.skeletonHero { height: 140px; border-radius: 14px; background: var(--cream); margin-bottom: 1.5rem; animation: pulse 1.2s infinite; }
-.skeletonContent { height: 300px; border-radius: 10px; background: var(--cream); animation: pulse 1.2s infinite; }
-@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.5} }
+/* INFO */
+.infoRow { display: flex; justify-content: space-between; align-items: center; padding: 0.65rem 0; border-bottom: 1px solid var(--cream2); font-size: 0.9rem; color: var(--warm-gray); }
+.infoRow:last-child { border-bottom: none; }
+.infoRow strong { color: var(--charcoal); }
+.rolePill { background: var(--cream2); color: var(--moss); font-size: 0.75rem; font-weight: 600; padding: 0.2rem 0.6rem; border-radius: 4px; }
+.roleAdmin { background: var(--terra); color: #fff; }
 
-/* Hero actions */
-.heroActions { display: flex; flex-direction: column; gap: 0.5rem; align-items: flex-end; }
-.dangerBtn {
-  background: none; border: 1px solid #c0392b; color: #c0392b;
-  border-radius: 8px; padding: 0.4rem 0.9rem;
-  font-size: 0.8rem; font-weight: 600; cursor: pointer;
-  transition: all 0.15s;
-}
-.dangerBtn:hover { background: #c0392b; color: #fff; }
-
-/* Delete account modal */
-.modalOverlay {
-  position: fixed; inset: 0; background: rgba(0,0,0,0.45);
-  display: flex; align-items: center; justify-content: center;
-  z-index: 1000; padding: 1rem;
-}
-.modal {
-  background: var(--white); border-radius: 14px;
-  padding: 2rem; max-width: 420px; width: 100%;
-  box-shadow: 0 16px 48px rgba(0,0,0,0.18);
-  text-align: center;
-}
-.modalIcon { font-size: 2.5rem; margin-bottom: 0.75rem; }
-.modal h3 { font-size: 1.2rem; color: var(--forest); margin: 0 0 0.75rem; }
-.modal p  { color: #555; font-size: 0.9rem; margin: 0 0 0.75rem; line-height: 1.5; }
-.deleteError { color: #c0392b; font-size: 0.85rem; margin: 0.5rem 0; }
-.deleteInput {
-  width: 100%; padding: 0.6rem 0.9rem; border-radius: 8px;
-  border: 1px solid var(--cream2); font-size: 0.9rem;
-  margin: 0.5rem 0 1rem; box-sizing: border-box;
-}
-.modalActions { display: flex; gap: 0.75rem; justify-content: center; }
-.modalCancel {
-  padding: 0.55rem 1.2rem; border-radius: 8px;
-  border: 1px solid var(--cream2); background: var(--white);
-  font-weight: 600; cursor: pointer; color: var(--forest);
-}
-.modalConfirm {
-  padding: 0.55rem 1.2rem; border-radius: 8px;
-  border: none; background: #c0392b; color: #fff;
-  font-weight: 600; cursor: pointer;
-}
-.modalConfirm:disabled { opacity: 0.6; cursor: not-allowed; }
+/* RECIPES */
+.recipeList { display: flex; flex-direction: column; gap: 0.6rem; }
+.recipeRow  { display: flex; justify-content: space-between; align-items: center; padding: 0.65rem 0; border-bottom: 1px solid var(--cream2); }
+.recipeRow:last-child { border-bottom: none; }
+.recipeInfo { display: flex; flex-direction: column; gap: 0.2rem; }
+.recipeTitle { font-weight: 600; font-size: 0.9rem; color: var(--charcoal); }
+.recipeMeta  { font-size: 0.78rem; color: var(--warm-gray); display: flex; align-items: center; gap: 0.5rem; }
+.tag { background: var(--cream2); color: var(--moss); font-size: 0.7rem; padding: 0.15rem 0.45rem; border-radius: 3px; }
+.recipeDate  { font-size: 0.78rem; color: var(--warm-gray); white-space: nowrap; }
+.empty { color: var(--warm-gray); font-size: 0.9rem; text-align: center; padding: 1rem 0; }

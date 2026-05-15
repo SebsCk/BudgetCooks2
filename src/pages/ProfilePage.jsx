@@ -1,248 +1,199 @@
-import { useState, useEffect } from 'react'
-import { useParams, Link, useNavigate } from 'react-router-dom'
+import { useState, useEffect, useRef } from 'react'
 import { useAuth } from '../context/AuthContext'
+import { useNavigate } from 'react-router-dom'
 import styles from './ProfilePage.module.css'
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:4000'
 
-function timeAgo(ts) {
-  const s = Math.floor((Date.now() - new Date(ts)) / 1000)
-  if (s < 60) return 'just now'
-  if (s < 3600) return `${Math.floor(s / 60)}m ago`
-  if (s < 86400) return `${Math.floor(s / 3600)}h ago`
-  return new Date(ts).toLocaleDateString()
-}
-
-function RecipeMini({ recipe }) {
-  return (
-    <Link to={`/recipe/${recipe.id}/comments`} className={styles.recipeCard}>
-      <div className={styles.recipeThumb}>
-        {recipe.image_url
-          ? <img src={recipe.image_url} alt={recipe.title} loading="lazy" />
-          : <span>🍽</span>
-        }
-      </div>
-      <div className={styles.recipeInfo}>
-        <p className={styles.recipeTitle}>{recipe.title}</p>
-        <p className={styles.recipeMeta}>
-          ❤️ {recipe.like_count || 0}
-          {recipe.estimated_cost ? ` · ₱${recipe.estimated_cost}` : ''}
-        </p>
-      </div>
-    </Link>
-  )
+function resizeImage(file, maxSize = 200) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = e => {
+      const img = new Image()
+      img.onload = () => {
+        const canvas = document.createElement('canvas')
+        const ratio = Math.min(maxSize / img.width, maxSize / img.height, 1)
+        canvas.width  = img.width  * ratio
+        canvas.height = img.height * ratio
+        canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height)
+        resolve(canvas.toDataURL('image/jpeg', 0.8))
+      }
+      img.onerror = reject
+      img.src = e.target.result
+    }
+    reader.onerror = reject
+    reader.readAsDataURL(file)
+  })
 }
 
 export default function ProfilePage() {
-  const { username } = useParams()
-  const { user } = useAuth()
+  const { user, setUser } = useAuth()
+  const token    = localStorage.getItem('token')
   const navigate = useNavigate()
-  const token = localStorage.getItem('token')
+  const fileRef  = useRef(null)
 
   const [profile,   setProfile]   = useState(null)
-  const [tab,       setTab]       = useState('recipes')
-  const [loading,   setLoading]   = useState(true)
+  const [recipes,   setRecipes]   = useState([])
+  const [preview,   setPreview]   = useState(null)
+  const [uploading, setUploading] = useState(false)
+  const [message,   setMessage]   = useState('')
   const [error,     setError]     = useState('')
-  const [bookmarks, setBookmarks] = useState([])
+  const [loading,   setLoading]   = useState(true)
 
-  const isMe = user?.username === username
-  const [avatarUploading, setAvatarUploading] = useState(false)
-  const [avatarError,     setAvatarError]     = useState('')
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  useEffect(() => {
+    if (!user) { navigate('/login'); return }
+    Promise.all([
+      fetch(`${API}/api/users/me`, { headers: { Authorization: `Bearer ${token}` } }).then(r => r.ok ? r.json() : null),
+      fetch(`${API}/api/recipes?user_id=${user.id}`).then(r => r.ok ? r.json() : []),
+    ]).then(([prof, recs]) => {
+      if (prof) setProfile(prof)
+      if (Array.isArray(recs)) setRecipes(recs)
+    }).finally(() => setLoading(false))
+  }, [user])
 
-  const handleAvatarUpload = async (e) => {
+  const handleFileChange = async e => {
     const file = e.target.files?.[0]
     if (!file) return
-    if (file.size > 2 * 1024 * 1024) { setAvatarError('Image must be under 2 MB'); return }
-    setAvatarUploading(true); setAvatarError('')
-    const reader = new FileReader()
-    reader.onload = async (ev) => {
-      try {
-        const res = await fetch(`${API}/api/users/me/avatar`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-          body: JSON.stringify({ avatar_url: ev.target.result }),
-        })
-        if (res.ok) {
-          const data = await res.json()
-          setProfile(p => ({ ...p, user: { ...p.user, avatar_url: data.avatar_url } }))
-          setAvatarError('')
-        } else {
-          setAvatarError('Failed to update photo.')
-        }
-      } catch { setAvatarError('Network error.') }
-      finally { setAvatarUploading(false) }
-    }
-    reader.readAsDataURL(file)
-  }
-  const [deletePassword,    setDeletePassword]    = useState('')
-  const [deleteError,       setDeleteError]       = useState('')
-  const [deleting,          setDeleting]          = useState(false)
-
-  useEffect(() => {
-    setLoading(true)
+    if (!file.type.startsWith('image/')) { setError('Please select an image file.'); return }
     setError('')
-    fetch(`${API}/api/users/${username}`)
-      .then(r => r.ok ? r.json() : Promise.reject('Not found'))
-      .then(data => setProfile(data))
-      .catch(() => setError('User not found.'))
-      .finally(() => setLoading(false))
-  }, [username])
-
-  useEffect(() => {
-    if (!isMe || !token) return
-    fetch(`${API}/api/users/me/bookmarks`, { headers: { Authorization: `Bearer ${token}` } })
-      .then(r => r.ok ? r.json() : [])
-      .then(data => setBookmarks(Array.isArray(data) ? data : []))
-      .catch(() => {})
-  }, [isMe, token])
-
-  if (loading) return (
-    <div className={styles.page}>
-      <div className={styles.skeletonHero} />
-      <div className={styles.skeletonContent} />
-    </div>
-  )
-
-  if (error || !profile) return (
-    <div className={styles.page}>
-      <p className={styles.empty}>{error || 'User not found.'} <Link to="/feed">← Feed</Link></p>
-    </div>
-  )
-
-  const totalLikes = (profile.recipes || []).reduce((n, r) => n + (r.like_count || 0), 0)
-
-  const TABS = [
-    { id: 'recipes',    label: `🍳 Recipes (${profile.recipes?.length || 0})` },
-    ...(isMe ? [{ id: 'liked', label: `❤️ Liked (${profile.liked?.length || 0})` }] : []),
-    { id: 'challenges', label: `🏆 Challenges (${profile.challenges?.length || 0})` },
-    ...(isMe ? [{ id: 'saved', label: `🔖 Saved (${bookmarks.length})` }] : []),
-  ]
-
-  const handleDeleteAccount = async () => {
-    if (!deletePassword) { setDeleteError('Please enter your password to confirm.'); return }
-    setDeleting(true); setDeleteError('')
     try {
-      const res = await fetch(`${API}/auth/me`, {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ password: deletePassword })
+      const resized = await resizeImage(file, 200)
+      setPreview(resized)
+    } catch { setError('Could not process image.') }
+  }
+
+  const handleUpload = async () => {
+    if (!preview) return
+    setUploading(true); setMessage(''); setError('')
+    try {
+      const res = await fetch(`${API}/api/users/avatar`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ avatar_url: preview }),
+      })
+      const data = await res.json()
+      if (!res.ok) { setError(data.error || 'Upload failed'); return }
+      setProfile(p => ({ ...p, avatar_url: preview }))
+      if (setUser) setUser(u => ({ ...u, avatar_url: preview }))
+      setPreview(null)
+      setMessage('Profile picture updated! ✅')
+    } catch { setError('Network error') }
+    finally { setUploading(false) }
+  }
+
+  const handleRemove = async () => {
+    setUploading(true); setMessage(''); setError('')
+    try {
+      const res = await fetch(`${API}/api/users/avatar`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ avatar_url: null }),
       })
       if (res.ok) {
-        localStorage.removeItem('token')
-        window.location.href = '/'
-      } else {
-        const d = await res.json()
-        setDeleteError(d.error || 'Failed to delete account.')
+        setProfile(p => ({ ...p, avatar_url: null }))
+        if (setUser) setUser(u => ({ ...u, avatar_url: null }))
+        setMessage('Profile picture removed.')
       }
-    } catch { setDeleteError('Network error.') }
-    finally { setDeleting(false) }
+    } catch { setError('Network error') }
+    finally { setUploading(false) }
   }
+
+  if (loading) return <div className={styles.page}><p style={{padding:'2rem'}}>Loading…</p></div>
+  if (!profile) return <div className={styles.page}><p style={{padding:'2rem'}}>Could not load profile.</p></div>
+
+  const avatarSrc = preview || profile.avatar_url
+  const initials  = profile.username.slice(0, 2).toUpperCase()
 
   return (
     <div className={styles.page}>
-      {/* Hero */}
-      <div className={styles.hero}>
-        <div className={styles.avatarWrap}>
-          {profile.user?.avatar_url
-            ? <img src={profile.user.avatar_url} alt={username} className={styles.avatarImg} />
-            : <div className={styles.avatar}>{username.slice(0, 2).toUpperCase()}</div>
-          }
-          {isMe && (
-            <label className={styles.avatarOverlay} title="Change profile photo">
-              {avatarUploading ? '⏳' : '📷'}
-              <input type="file" accept="image/*" style={{display:'none'}} onChange={handleAvatarUpload} />
-            </label>
-          )}
-          {avatarError && <p className={styles.avatarError}>{avatarError}</p>}
-        </div>
-        <div className={styles.heroInfo}>
-          <h1 className={styles.username}>{username}</h1>
-          <p className={styles.joined}>Joined {new Date(profile.user?.created_at).toLocaleDateString()}</p>
-          <div className={styles.statRow}>
-            <div className={styles.stat}><strong>{profile.recipes?.length || 0}</strong><span>Recipes</span></div>
-            <div className={styles.stat}><strong>{totalLikes}</strong><span>Total Likes</span></div>
-            <div className={styles.stat}><strong>{profile.liked?.length || 0}</strong><span>Liked</span></div>
-          </div>
-        </div>
-        <div className={styles.heroActions}>
-          {isMe ? (
-            <>
-              <button className={styles.editBtn} onClick={() => navigate('/share')}>+ Add Recipe</button>
-              <button className={styles.dangerBtn} onClick={() => setShowDeleteConfirm(true)}>Delete Account</button>
-            </>
-          ) : (
-            <button className={styles.editBtn} onClick={() => navigate('/feed')}>Browse Recipes</button>
-          )}
-        </div>
+      <div className={styles.header}>
+        <h1>👤 My Profile</h1>
       </div>
 
-      {/* Tabs */}
-      <div className={styles.tabs}>
-        {TABS.map(t => (
-          <button key={t.id}
-            className={`${styles.tab} ${tab === t.id ? styles.tabActive : ''}`}
-            onClick={() => setTab(t.id)}>{t.label}</button>
-        ))}
-      </div>
+      <div className={styles.inner}>
+        {/* AVATAR CARD */}
+        <div className={styles.card}>
+          <h2>Profile Picture</h2>
 
-      {/* Tab content */}
-      <div className={styles.content}>
-        {tab === 'recipes' && (
-          profile.recipes?.length === 0
-            ? <p className={styles.empty}>No recipes shared yet.</p>
-            : <div className={styles.grid}>{profile.recipes.map(r => <RecipeMini key={r.id} recipe={r} />)}</div>
-        )}
-        {tab === 'liked' && (
-          profile.liked?.length === 0
-            ? <p className={styles.empty}>No liked recipes yet.</p>
-            : <div className={styles.grid}>{profile.liked.map(r => <RecipeMini key={r.id} recipe={{...r, like_count: undefined}} />)}</div>
-        )}
-        {tab === 'challenges' && (
-          profile.challenges?.length === 0
-            ? <p className={styles.empty}>No challenge entries yet.</p>
-            : <div className={styles.challengeList}>
-                {profile.challenges.map(c => (
-                  <div key={c.id} className={styles.challengeRow}>
-                    <div>
-                      <p className={styles.challengeTitle}>{c.title}</p>
-                      <p className={styles.challengeMeta}>Submitted: {c.recipe_title}</p>
-                    </div>
-                    <span className={`${styles.statusPill} ${styles[`status_${c.status}`]}`}>{c.status}</span>
-                  </div>
-                ))}
-              </div>
-        )}
-        {tab === 'saved' && isMe && (
-          bookmarks.length === 0
-            ? <p className={styles.empty}>No saved recipes yet.</p>
-            : <div className={styles.grid}>{bookmarks.map(r => <RecipeMini key={r.id} recipe={r} />)}</div>
-        )}
-      </div>
-
-      {/* Delete Account Modal */}
-      {showDeleteConfirm && (
-        <div className={styles.modalOverlay} onClick={() => setShowDeleteConfirm(false)}>
-          <div className={styles.modal} onClick={e => e.stopPropagation()}>
-            <div className={styles.modalIcon}>⚠️</div>
-            <h3>Delete Your Account?</h3>
-            <p>Your account will be permanently deleted. Your recipes and forum posts will remain but show as <strong>Deleted User</strong> — only admins can remove them.</p>
-            <p style={{fontSize:'0.85rem',color:'#888',marginTop:'0.5rem'}}>Tip: delete your posts first if you want them removed.</p>
-            {deleteError && <p className={styles.deleteError}>{deleteError}</p>}
-            <input
-              type="password" placeholder="Enter your password to confirm"
-              value={deletePassword} onChange={e => setDeletePassword(e.target.value)}
-              className={styles.deleteInput}
-            />
-            <div className={styles.modalActions}>
-              <button className={styles.modalCancel} onClick={() => { setShowDeleteConfirm(false); setDeletePassword(''); setDeleteError('') }}>Cancel</button>
-              <button className={styles.modalConfirm} onClick={handleDeleteAccount} disabled={deleting}>
-                {deleting ? 'Deleting…' : 'Delete My Account'}
+          <div className={styles.avatarArea}>
+            {avatarSrc ? (
+              <img src={avatarSrc} alt="Profile" className={styles.avatarImg} />
+            ) : (
+              <div className={styles.avatarPlaceholder}>{initials}</div>
+            )}
+            <div className={styles.avatarActions}>
+              <button className={styles.uploadBtn} onClick={() => fileRef.current?.click()}>
+                📷 Choose Photo
               </button>
+              {profile.avatar_url && !preview && (
+                <button className={styles.removeBtn} onClick={handleRemove} disabled={uploading}>
+                  🗑 Remove
+                </button>
+              )}
             </div>
           </div>
+
+          <input ref={fileRef} type="file" accept="image/*" style={{display:'none'}}
+            onChange={handleFileChange} />
+
+          {preview && (
+            <div className={styles.previewActions}>
+              <p className={styles.previewHint}>Preview — looks good?</p>
+              <div style={{display:'flex',gap:'0.75rem'}}>
+                <button className={styles.cancelBtn} onClick={() => setPreview(null)}>Cancel</button>
+                <button className={styles.saveBtn} onClick={handleUpload} disabled={uploading}>
+                  {uploading ? 'Uploading…' : '✅ Save Photo'}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {message && <p className={styles.success}>{message}</p>}
+          {error   && <p className={styles.error}>⚠ {error}</p>}
+
+          <div className={styles.hints}>
+            <p>• Accepted: JPG, PNG, GIF, WebP</p>
+            <p>• Max display size: 200×200px (auto-resized)</p>
+            <p>• Keep file under 500KB for best performance</p>
+          </div>
         </div>
-      )}
+
+        {/* PROFILE INFO */}
+        <div className={styles.card}>
+          <h2>Account Info</h2>
+          <div className={styles.infoRow}><span>Username</span><strong>{profile.username}</strong></div>
+          <div className={styles.infoRow}><span>Email</span><strong>{profile.email}</strong></div>
+          <div className={styles.infoRow}><span>Role</span>
+            <span className={`${styles.rolePill} ${profile.role === 'admin' ? styles.roleAdmin : ''}`}>{profile.role}</span>
+          </div>
+          <div className={styles.infoRow}><span>Member since</span>
+            <strong>{new Date(profile.created_at).toLocaleDateString()}</strong>
+          </div>
+        </div>
+
+        {/* MY RECIPES */}
+        <div className={styles.card}>
+          <h2>My Recipes ({recipes.length})</h2>
+          {recipes.length === 0
+            ? <p className={styles.empty}>You haven't shared any recipes yet.</p>
+            : (
+            <div className={styles.recipeList}>
+              {recipes.map(r => (
+                <div key={r.id} className={styles.recipeRow}>
+                  <div className={styles.recipeInfo}>
+                    <span className={styles.recipeTitle}>{r.title}</span>
+                    <span className={styles.recipeMeta}>
+                      {r.category && <span className={styles.tag}>{r.category}</span>}
+                      ₱{r.estimated_cost} · ❤️ {r.like_count || 0}
+                    </span>
+                  </div>
+                  <span className={styles.recipeDate}>{new Date(r.created_at).toLocaleDateString()}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   )
 }

@@ -18,6 +18,7 @@ import NotificationsPage   from './pages/NotificationsPage'
 import ProfilePage          from './pages/ProfilePage'
 import ErrorBoundary from './components/ErrorBoundary'
 import './index.css'
+import ProfilePage from './pages/ProfilePage'
 
 export default function App() {
   return (
@@ -26,6 +27,7 @@ export default function App() {
         <Navbar />
         <ErrorBoundary>
         <Routes>
+          <Route path="/profile" element={<ProfilePage />} />
           <Route path="/"              element={<Home />}            />
           <Route path="/feed"          element={<FeedPage />}        />
           <Route path="/forum" element={<ForumPage />} />
