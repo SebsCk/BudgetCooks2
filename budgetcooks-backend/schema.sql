@@ -18,7 +18,8 @@ CREATE TABLE users (
   email         VARCHAR(255)    NOT NULL,
   password_hash VARCHAR(255)    NOT NULL,
   role          ENUM('member','admin') NOT NULL DEFAULT 'member',
-  avatar_url    LONGTEXT        DEFAULT NULL,
+  avatar_url      LONGTEXT        DEFAULT NULL,
+  challenge_wins  INT UNSIGNED    NOT NULL DEFAULT 0,
   created_at    TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
   PRIMARY KEY (id),
@@ -201,6 +202,20 @@ CREATE TABLE challenges (
 -- -------------------------------------------------------------
 --  CHALLENGE_ENTRIES
 -- -------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS notifications (
+  id           INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  user_id      INT UNSIGNED NOT NULL,
+  type         VARCHAR(30)  NOT NULL,
+  actor        VARCHAR(80)  DEFAULT NULL,
+  recipe_id    INT UNSIGNED DEFAULT NULL,
+  challenge_id INT UNSIGNED DEFAULT NULL,
+  message      VARCHAR(255) DEFAULT NULL,
+  created_at   TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  KEY idx_notif_user (user_id),
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 CREATE TABLE follows (
   id          INT UNSIGNED NOT NULL AUTO_INCREMENT,
   follower_id INT UNSIGNED NOT NULL,

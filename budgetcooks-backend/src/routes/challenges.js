@@ -85,8 +85,12 @@ router.patch('/:id/status', authenticate, authorizeAdmin, async (req, res) => {
       LIMIT 1
     `, [req.params.id]);
 
+    const [[challenge]] = await db.query('SELECT title FROM challenges WHERE id = ?', [req.params.id]);
+
     if (entries.length > 0) {
       const winner = entries[0];
+
+      // Save winner to challenge
       await db.query(
         `UPDATE challenges SET status = 'closed',
           winner_recipe_id = ?, winner_username = ?,
@@ -94,6 +98,26 @@ router.patch('/:id/status', authenticate, authorizeAdmin, async (req, res) => {
          WHERE id = ?`,
         [winner.recipe_id, winner.author, winner.title, winner.image_url, req.params.id]
       );
+
+      // Get winner's user id
+      const [winnerUser] = await db.query(
+        'SELECT id FROM users WHERE username = ?', [winner.author]
+      );
+
+      if (winnerUser.length > 0) {
+        // Increment their challenge_wins count
+        await db.query(
+          'UPDATE users SET challenge_wins = challenge_wins + 1 WHERE id = ?',
+          [winnerUser[0].id]
+        );
+
+        // Insert win notification
+        await db.query(
+          `INSERT INTO notifications (user_id, type, challenge_id, message)
+           VALUES (?, 'win', ?, ?)`,
+          [winnerUser[0].id, req.params.id, `🏆 You won the "${challenge.title}" challenge!`]
+        );
+      }
     } else {
       await db.query("UPDATE challenges SET status = 'closed' WHERE id = ?", [req.params.id]);
     }

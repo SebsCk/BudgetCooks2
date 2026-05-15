@@ -40,6 +40,7 @@ export default function NotificationsPage() {
 
   const handleClick = (n) => {
     if (n.type === 'follow') { navigate(`/profile/${n.actor}`); return }
+    if (n.type === 'win') { navigate(`/challenges`); return }
     const dest = n.comment_id
       ? `/recipe/${n.recipe_id}/comments?comment=${n.comment_id}`
       : `/recipe/${n.recipe_id}/comments`
@@ -75,13 +76,19 @@ export default function NotificationsPage() {
                 onClick={() => handleClick(n)}
               >
                 <div className={styles.iconWrap}>
-                  {n.type === 'like' ? '❤️' : n.type === 'follow' ? '👤' : '💬'}
+                  {n.type === 'like' ? '❤️' : n.type === 'follow' ? '👤' : n.type === 'win' ? '🏆' : '💬'}
                 </div>
                 <div className={styles.itemBody}>
                   <p className={styles.itemText}>
                     <strong>{n.actor}</strong>{' '}
-                    {n.type === 'follow' ? 'started following you' : n.type === 'like' ? 'liked' : 'commented on'}{' '}
-                    {n.type !== 'follow' && <em>{n.recipe_title}</em>}
+                    {n.type === 'win'
+                      ? n.preview
+                      : n.type === 'follow'
+                      ? 'started following you'
+                      : n.type === 'like'
+                      ? <>liked <em>{n.recipe_title}</em></>
+                      : <>commented on <em>{n.recipe_title}</em></>
+                    }
                   </p>
                   {n.type === 'comment' && n.preview && (
                     <p className={styles.preview}>"{n.preview}"</p>

@@ -215,11 +215,21 @@ export default function ProfilePage() {
           {avatarError && <p className={styles.avatarError}>{avatarError}</p>}
         </div>
         <div className={styles.heroInfo}>
-          <h1 className={styles.username}>{username}</h1>
+          <h1 className={styles.username}>
+            {username}
+            {profile.challenge_wins > 0 && (
+              <span className={styles.winBadge} title={`${profile.challenge_wins} challenge win${profile.challenge_wins > 1 ? 's' : ''}`}>
+                🏆
+              </span>
+            )}
+          </h1>
           <p className={styles.joined}>Joined {new Date(profile.user?.created_at).toLocaleDateString()}</p>
           <div className={styles.statRow}>
             <div className={styles.stat}><strong>{profile.recipes?.length || 0}</strong><span>Recipes</span></div>
             <div className={styles.stat}><strong>{totalLikes}</strong><span>Total Likes</span></div>
+            {(profile.challenge_wins > 0) && (
+              <div className={styles.stat}><strong>🏆 {profile.challenge_wins}</strong><span>Wins</span></div>
+            )}
             <button className={styles.statBtn} onClick={() => openFollowModal('followers')}>
               <strong>{followerCount}</strong><span>Followers</span>
             </button>

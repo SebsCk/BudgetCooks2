@@ -78,9 +78,18 @@ router.get('/me/notifications', authenticate, async (req, res) => {
       ORDER BY f.created_at DESC LIMIT 20
     `, [req.user.id]);
 
-    const all = [...likes, ...comments, ...follows]
+    const [wins] = await db.query(`
+      SELECT 'win' AS type, NULL AS actor, NULL AS recipe_title,
+             n.recipe_id, NULL AS comment_id, n.message AS preview,
+             n.created_at, n.challenge_id
+      FROM notifications n
+      WHERE n.user_id = ? AND n.type = 'win'
+      ORDER BY n.created_at DESC LIMIT 10
+    `, [req.user.id]);
+
+    const all = [...likes, ...comments, ...follows, ...wins]
       .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
-      .slice(0, 30);
+      .slice(0, 40);
     res.json(all);
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
@@ -345,6 +354,10 @@ router.get('/:username', async (req, res) => {
       ORDER BY c.created_at DESC LIMIT 20
     `, [user.id]);
 
+    const [[{ challenge_wins }]] = await db.query(
+      'SELECT challenge_wins FROM users WHERE id = ?', [user.id]
+    );
+
     const [[{ follower_count }]] = await db.query(
       'SELECT COUNT(*) AS follower_count FROM follows WHERE following_id = ?', [user.id]
     );
@@ -355,7 +368,7 @@ router.get('/:username', async (req, res) => {
       'SELECT id FROM follows WHERE follower_id = ? AND following_id = ?', [viewerId, user.id]
     ))[0].length > 0 : false;
 
-    res.json({ ...user, recipes, liked, challenges, comments, follower_count, following_count, is_following });
+    res.json({ ...user, recipes, liked, challenges, comments, follower_count, following_count, is_following, challenge_wins });
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
