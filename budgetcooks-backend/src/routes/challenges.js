@@ -116,9 +116,16 @@ router.post('/:id/enter', authenticate, async (req, res) => {
   if (challenge[0].status !== 'active') return res.status(400).json({ error: 'Challenge is not active' });
 
   const [owned] = await db.query(
-    'SELECT id FROM recipes WHERE id = ? AND user_id = ?', [recipe_id, req.user.id]
+    'SELECT id, estimated_cost FROM recipes WHERE id = ? AND user_id = ?', [recipe_id, req.user.id]
   );
   if (!owned.length) return res.status(403).json({ error: 'You can only submit your own recipes' });
+
+  const budgetLimit = challenge[0].budget_limit;
+  if (budgetLimit && owned[0].estimated_cost > budgetLimit) {
+    return res.status(400).json({
+      error: `Your recipe costs ₱${owned[0].estimated_cost} which exceeds the ₱${budgetLimit} budget limit for this challenge.`
+    });
+  }
 
   try {
     await db.query(

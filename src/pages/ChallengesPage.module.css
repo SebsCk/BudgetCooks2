@@ -94,3 +94,7 @@
 /* Like count on entry rows */
 .entryLikes { font-size: 0.8rem; color: #e53e3e; font-weight: 600;
   margin-left: auto; white-space: nowrap; }
+
+.overBudgeTag {
+  color: #c53030; font-weight: 700; font-size: 0.75rem;
+}

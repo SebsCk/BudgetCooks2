@@ -159,6 +159,9 @@ function ChallengeCard({ ch, token, user, isAdmin, onRefresh }) {
                         <span className={styles.entryTitle}>{e.title}</span>
                         <span className={styles.entryMeta}>
                           by <strong>{e.author}</strong> · ₱{e.estimated_cost || '—'}
+                          {ch.budget_limit && e.estimated_cost > ch.budget_limit && (
+                            <span className={styles.overBudgeTag}> ⚠️ Over limit</span>
+                          )}
                         </span>
                       </div>
                       <span className={styles.entryLikes}>❤ {e.like_count || 0}</span>
@@ -186,18 +189,26 @@ function ChallengeCard({ ch, token, user, isAdmin, onRefresh }) {
               <p style={{color:'#999',fontSize:'0.9rem'}}>You haven't posted any recipes yet. <a href="/share" style={{color:'var(--terra)'}}>Share one first!</a></p>
             ) : (
               <div style={{display:'flex',flexDirection:'column',gap:'0.5rem',marginBottom:'1.25rem'}}>
-                {recipes.map(r => (
-                  <label key={r.id} style={{display:'flex',alignItems:'center',gap:'0.75rem',padding:'0.65rem 0.85rem',border:`2px solid ${pickedId==r.id?'var(--terra)':'#e2e8f0'}`,borderRadius:'9px',cursor:'pointer',background:pickedId==r.id?'#fff5f0':'#fff'}}>
-                    <input type="radio" name="recipeId" value={r.id}
-                      checked={pickedId == r.id}
-                      onChange={() => setPickedId(r.id)}
-                      style={{accentColor:'var(--terra)'}} />
-                    <div>
-                      <div style={{fontWeight:600,fontSize:'0.9rem'}}>{r.title}</div>
-                      <div style={{fontSize:'0.78rem',color:'#888'}}>₱{r.estimated_cost || '—'} · {r.servings || 1} servings</div>
-                    </div>
-                  </label>
-                ))}
+                {recipes.map(r => {
+                  const overBudget = ch.budget_limit && r.estimated_cost > ch.budget_limit
+                  return (
+                    <label key={r.id} style={{display:'flex',alignItems:'center',gap:'0.75rem',padding:'0.65rem 0.85rem',border:`2px solid ${overBudget?'#fed7d7':pickedId==r.id?'var(--terra)':'#e2e8f0'}`,borderRadius:'9px',cursor:overBudget?'not-allowed':'pointer',background:overBudget?'#fff5f5':pickedId==r.id?'#fff5f0':'#fff',opacity:overBudget?0.6:1}}>
+                      <input type="radio" name="recipeId" value={r.id}
+                        checked={pickedId == r.id}
+                        onChange={() => !overBudget && setPickedId(r.id)}
+                        disabled={overBudget}
+                        style={{accentColor:'var(--terra)'}} />
+                      <div style={{flex:1}}>
+                        <div style={{fontWeight:600,fontSize:'0.9rem'}}>{r.title}</div>
+                        <div style={{fontSize:'0.78rem',color:'#888'}}>₱{r.estimated_cost || '—'} · {r.servings || 1} servings</div>
+                      </div>
+                      {overBudget && <span style={{fontSize:'0.72rem',color:'#c53030',fontWeight:600,whiteSpace:'nowrap'}}>Over ₱{ch.budget_limit} limit</span>}
+                    </label>
+                  )
+                })}
+                {recipes.every(r => ch.budget_limit && r.estimated_cost > ch.budget_limit) && (
+                  <p style={{color:'#c53030',fontSize:'0.85rem',marginTop:'0.25rem'}}>⚠️ All your recipes exceed the ₱{ch.budget_limit} budget limit. <a href="/share" style={{color:'var(--terra)'}}>Share a cheaper one!</a></p>
+                )}
               </div>
             )}
             <div style={{display:'flex',gap:'0.5rem',justifyContent:'flex-end'}}>
